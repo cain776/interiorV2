@@ -39,6 +39,11 @@ jobs:
           fi
           git fetch origin main
 
+          if [ "$(git rev-list --count origin/main..origin/dev)" = "0" ]; then
+            echo "dev has no commits to promote. origin/main is already up to date with origin/dev."
+            exit 0
+          fi
+
           existing_url="$(gh pr list --base main --head dev --state open --json url --jq '.[0].url // empty')"
           if [ -n "$existing_url" ]; then
             echo "Promotion PR already exists: $existing_url"

@@ -11,8 +11,10 @@
 
 초기 1회: 현재 저장소처럼 `dev`만 있고 `main`이 아직 없다면, `main`을 한 번만 생성한 뒤 보호 브랜치를 건다. 예: GitHub UI에서 `dev` 기준으로 `main` 생성 또는 로컬에서 `git push origin dev:main`. 이 작업 이후부터는 `main` 직접 push 금지.
 
+주의: `workflow_dispatch` 수동 실행 workflow 는 GitHub 기본 브랜치에 파일이 있어야 실행할 수 있다. 현재 기본 브랜치가 `dev`라서 수동 promotion workflow 가 보인다. 나중에 기본 브랜치를 `main`으로 바꾸려면, 먼저 현재 `dev` 내용으로 `main`을 bootstrap 해서 `.github/workflows/*` 파일이 `main`에도 존재해야 한다.
+
 1. 작업 브랜치 또는 로컬 작업을 `dev`에 반영한다.
-2. `dev` push 시 `CI` workflow 가 자동 실행된다.
+2. `dev` push 또는 `dev`/`main` 대상 PR 시 `CI` workflow 가 자동 실행된다.
 3. 릴리스할 때 GitHub Actions의 `Promote dev to main` workflow 를 수동 실행한다.
 4. 생성된 `dev -> main` PR 에서 CI 결과와 변경 내용을 확인한다.
 5. PR merge 후 `main`을 배포 기준으로 사용한다.
@@ -40,13 +42,15 @@
 
 - `.github/workflows/ci.yml`
   - `dev` push 때 실행
-  - `main` 대상 PR 때 실행
+  - `dev` / `main` 대상 PR 때 실행
   - backend typecheck/test/build
   - PostgreSQL service 기반 integration test
   - frontend typecheck
 
 - `.github/workflows/promote-dev-to-main.yml`
   - 수동 실행
+  - `main` 이 아직 없으면 실패하고 bootstrap 안내
+  - `dev` 에 승격할 새 커밋이 없으면 성공 종료
   - 이미 열린 `dev -> main` PR 이 있으면 새로 만들지 않고 기존 PR 을 출력
   - 없으면 `.github/pull_request_template.md` 기반 PR 생성
 
