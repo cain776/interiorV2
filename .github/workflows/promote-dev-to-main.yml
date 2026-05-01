@@ -1,0 +1,54 @@
+name: Promote dev to main
+
+on:
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: Create the PR as a draft
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    name: Create dev to main PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Create or show promotion PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRAFT_FLAG: ${{ inputs.draft == true && '--draft' || '' }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin dev
+          if ! git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
+            echo "::error::origin/main does not exist yet. Bootstrap main once, protect it, then run this workflow."
+            exit 1
+          fi
+          git fetch origin main
+
+          existing_url="$(gh pr list --base main --head dev --state open --json url --jq '.[0].url // empty')"
+          if [ -n "$existing_url" ]; then
+            echo "Promotion PR already exists: $existing_url"
+            echo "url=$existing_url" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          gh pr create \
+            --base main \
+            --head dev \
+            --title "Promote dev to main" \
+            --body-file .github/pull_request_template.md \
+            $DRAFT_FLAG
