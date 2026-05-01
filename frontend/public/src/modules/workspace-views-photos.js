@@ -108,9 +108,9 @@ function renderPhotoCard(photo, selectedPhotoId) {
   const selected = photo.id === selectedPhotoId;
   const alt = photo.caption ?? PHOTO_KIND_LABEL[photo.kind];
   return `
-    <figure class="photo-card${selected ? " is-selected" : ""}" aria-selected="${selected ? "true" : "false"}">
+    <figure class="photo-card${selected ? " is-selected" : ""}" data-photo-id="${esc(photo.id)}" draggable="true" aria-selected="${selected ? "true" : "false"}">
       <button type="button" class="zoomable-image" data-action="ws-zoom-image" data-image-src="${esc(photo.url)}" data-image-alt="${esc(alt)}" title="확대해서 보기">
-        <img src="${esc(photo.url)}" alt="${esc(alt)}" />
+        <img src="${esc(photo.url)}" alt="${esc(alt)}" draggable="false" />
       </button>
       <span>${esc(PHOTO_KIND_LABEL[photo.kind])}</span>
       <button type="button" class="photo-select-control${selected ? " is-selected" : ""}" data-action="ws-select-photo" data-id="${esc(photo.id)}" aria-pressed="${selected ? "true" : "false"}" aria-label="${selected ? "사진 선택 해제" : "사진 선택"}" title="${selected ? "선택 해제" : "사진 선택"}">${selected ? iCheck({ size: 13, strokeWidth: 3 }) : ""}</button>

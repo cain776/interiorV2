@@ -21,6 +21,7 @@ import {
 } from "./workspace-selectors.js";
 
 /** @typedef {import("./workspace.js").WorkspaceState} WorkspaceState */
+/** @typedef {import("./workspace-format.js").PhotoItem} PhotoItem */
 /** @typedef {"before"|"during"|"after"|"reference"|"defect"|"floorplan"|"naver_floorplan"|"fixture"} PhotoKind */
 
 // 백엔드 blobUrl 5MB 제한을 넘기기 전에 차단. base64 오버헤드 감안 시 원본 약 3.7MB.
@@ -377,22 +378,54 @@ export function openPhotoEditModal(s, id, render) {
 
 /** @param {WorkspaceState} s @param {string} id @param {string|undefined} direction @param {() => void} render */
 export async function movePhoto(s, id, direction, render) {
-  const item = selectedLineItem(s);
-  const space = currentSpace(s);
-  const photos = s.view === "spaces" && s.spacePhotoScope === "lineItem" && item
-    ? getPhotosForLineItem(s, item.id)
-    : s.view === "spaces" && space
-      ? getPhotosForSpace(s, space.id)
-    : item
-      ? getPhotosForLineItem(s, item.id)
-      : [];
+  const photos = photosForCurrentScope(s);
   const index = photos.findIndex((photo) => photo.id === id);
   const nextIndex = direction === "prev" ? index - 1 : direction === "next" ? index + 1 : -1;
   if (index < 0 || nextIndex < 0 || nextIndex >= photos.length) return;
   const ordered = [...photos];
-  const current = ordered[index];
-  ordered[index] = ordered[nextIndex];
-  ordered[nextIndex] = current;
+  swapItems(ordered, index, nextIndex);
+  await applyPhotoOrder(s, ordered, render);
+}
+
+/** @param {WorkspaceState} s @param {string} sourceId @param {string} targetId @param {() => void} render */
+export async function swapPhotos(s, sourceId, targetId, render) {
+  if (sourceId === targetId) return;
+  const photos = photosForCurrentScope(s);
+  const sourceIndex = photos.findIndex((photo) => photo.id === sourceId);
+  const targetIndex = photos.findIndex((photo) => photo.id === targetId);
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const ordered = [...photos];
+  swapItems(ordered, sourceIndex, targetIndex);
+  s.selectedPhotoId = sourceId;
+  await applyPhotoOrder(s, ordered, render);
+}
+
+/** @param {WorkspaceState} s */
+function photosForCurrentScope(s) {
+  const item = selectedLineItem(s);
+  const space = currentSpace(s);
+  return s.view === "spaces" && s.spacePhotoScope === "lineItem" && item
+    ? getPhotosForLineItem(s, item.id)
+    : s.view === "spaces" && space
+      ? getPhotosForSpace(s, space.id)
+      : item
+        ? getPhotosForLineItem(s, item.id)
+        : [];
+}
+
+/**
+ * @param {PhotoItem[]} items
+ * @param {number} a
+ * @param {number} b
+ */
+function swapItems(items, a, b) {
+  const current = items[a];
+  items[a] = items[b];
+  items[b] = current;
+}
+
+/** @param {WorkspaceState} s @param {PhotoItem[]} ordered @param {() => void} render */
+async function applyPhotoOrder(s, ordered, render) {
   const result = await api.attachments.reorder(s.bundle.project.id, ordered.map((photo) => photo.id));
   if (!result.ok) return showToast(result.error, { kind: "error" });
   const updatedById = new Map(result.data.map((attachment) => [attachment.id, attachment]));

@@ -30,5 +30,6 @@ export {
   openPhotoModal,
   openPhotoEditModal,
   movePhoto,
+  swapPhotos,
   deletePhoto,
 } from "./workspace-modals-photo.js";
