@@ -1,0 +1,2 @@
+-- 초기 사용자 시드. 비밀번호는 별도 스크립트로 hash 후 삽입 권장.
+-- 예: INSERT INTO users (id, email, name, password_hash) VALUES (...);

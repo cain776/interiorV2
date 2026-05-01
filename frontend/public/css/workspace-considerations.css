@@ -1,0 +1,161 @@
+.consideration-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consideration-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 4px 4px 4px 8px;
+  border: 1px solid transparent;
+}
+
+.consideration-list li:hover {
+  background: var(--bg);
+}
+
+.consideration-list li.selected {
+  background: var(--brand-soft);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.consideration-list input {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+  accent-color: var(--brand);
+  flex-shrink: 0;
+}
+
+.consideration-row {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 6px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.consideration-row:hover {
+  background: transparent;
+}
+
+.consideration-text {
+  min-width: 0;
+  display: block;
+  font-size: 12px;
+}
+
+.consideration-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.consideration-meta {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.consideration-text span {
+  min-width: 0;
+}
+
+.consideration-text b {
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 999px;
+  background: var(--brand-soft);
+  padding: 1px 5px;
+  color: var(--brand);
+  font-size: 9px;
+}
+
+.consideration-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consideration-text b.space {
+  border-color: rgba(34, 197, 94, 0.26);
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.consideration-text b.item {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.consideration-text .done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.consideration-text em {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-left: 0;
+  border-radius: 999px;
+  background: #fef3c7;
+  padding: 1px 5px;
+  color: #92400e;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.consideration-meta em.priority {
+  margin-left: 0;
+  max-width: 42px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.consideration-text small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.row-tools {
+  display: flex;
+  flex-shrink: 0;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.consideration-list li:hover .row-tools {
+  opacity: 1;
+}

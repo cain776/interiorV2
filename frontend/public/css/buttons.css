@@ -1,0 +1,48 @@
+/* ===== Buttons ===== */
+button {
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elev);
+  color: var(--fg);
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+button:hover { background: #f1f5f9; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.primary {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+}
+
+button.primary:hover { background: #1d4ed8; }
+
+button.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+button.ghost:hover { background: var(--bg); color: var(--fg); }
+
+button.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+button.icon {
+  padding: 2px 8px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+button.full {
+  width: 100%;
+  text-align: center;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+

@@ -1,0 +1,278 @@
+/* ===== V1 workspace port ===== */
+.workspace-v1 {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.workspace-topbar {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: var(--workspace-sidebar-width) minmax(0, 1fr) auto;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-brandbar,
+.workspace-titlebar,
+.workspace-actions,
+.head-left,
+.head-metrics,
+.quote-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.workspace-brandbar {
+  height: 100%;
+  gap: 8px;
+  border-right: 1px solid var(--border);
+  padding: 0 8px;
+}
+
+.workspace-titlebar {
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.workspace-actions {
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.app-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.workspace-topbar h1 {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.divider {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.project-name {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-address {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 360px;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.project-address:hover {
+  background: var(--bg);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.project-meta,
+.quote-context,
+.tiny-muted,
+.photo-context {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.user-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mode-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 3px;
+}
+
+.mode-tabs button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mode-tabs button.active {
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-tabs button.active.brand { background: var(--brand); }
+.mode-tabs button.active.success { background: var(--success); }
+
+.workspace-lnb {
+  position: fixed;
+  top: 48px;
+  bottom: 0;
+  left: 0;
+  z-index: 19;
+  display: flex;
+  width: var(--workspace-sidebar-width);
+  flex-direction: column;
+  gap: 16px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 18px 14px 14px;
+  box-shadow: 12px 0 28px rgba(15, 23, 42, 0.10);
+}
+
+/* 패널 최상단 — 현재 프로젝트 이름. */
+.workspace-lnb-title {
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 의미 단위 섹션 — 현재 프로젝트 / 다른 곳으로 / 빠른 작업. */
+.workspace-lnb-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-lnb-section + .workspace-lnb-section {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.workspace-lnb-section-title {
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.workspace-lnb nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-lnb nav button {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 8px 10px;
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+/* 라벨은 가운데 늘어나고, 외부 이동 표시 아이콘은 우측 끝. */
+.workspace-lnb nav button > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-lnb nav button > svg:last-child {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.workspace-lnb nav button:hover {
+  border-color: var(--border);
+  background: var(--bg);
+}
+
+/* 현재 view (견적/공간) 강조. */
+.workspace-lnb nav button.active {
+  background: var(--brand-soft, rgba(37, 99, 235, 0.08));
+  color: var(--brand, #2563eb);
+}
+
+.workspace-lnb nav button.active > svg {
+  color: var(--brand, #2563eb);
+}
+
+.workspace-lnb-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.workspace-lnb-user span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

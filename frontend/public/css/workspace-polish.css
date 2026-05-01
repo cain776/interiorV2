@@ -1,0 +1,292 @@
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1180px) {
+  :root {
+    --workspace-sidebar-width: 190px;
+  }
+
+  .workspace-grid-v1 {
+    grid-template-columns: calc(var(--workspace-sidebar-width) + 24px) minmax(0, 520px) minmax(460px, 1fr);
+  }
+
+  .workspace-grid-v1.space-management-grid {
+    --space-management-space-panel-width: 227px;
+    --space-management-considerations-panel-width: 277px;
+    --space-management-line-items-panel-width: 252px;
+    --space-management-photo-width: 715px;
+    --workspace-sidebar-width: var(--space-management-space-panel-width);
+    grid-template-columns:
+      minmax(calc(var(--space-management-space-panel-width) + 24px), 1fr)
+      minmax(
+        calc(
+          var(--space-management-considerations-panel-width) +
+          var(--space-management-line-items-panel-width) +
+          32px
+        ),
+        2fr
+      )
+      var(--space-management-photo-width);
+  }
+
+  .ws-sidebar-v1 {
+    margin: 12px;
+  }
+
+  .quote-pane-v1 {
+    padding: 12px 12px 12px 0;
+    gap: 12px;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .space-detail-pane .space-photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ws-main-body {
+    padding: 12px 12px 12px 0;
+  }
+
+  .project-address,
+  .project-meta,
+  .quote-context {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .modal-card,
+  .modal-card:has(.wide-form) {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .modal-card > form {
+    padding: 14px;
+  }
+
+  .modal-card .form .row,
+  .wide-form .row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card .form-actions {
+    bottom: -14px;
+    margin: 4px -14px -14px;
+    padding: 10px 14px;
+  }
+}
+
+/* ===== v1 spec polish: SVG icons + topbar identity ===== */
+
+/* 모든 svg 아이콘은 currentColor 따라가도록 — 인라인 스타일 보정 */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* 아이콘 버튼 안의 svg 위치 정렬 */
+.icon-btn svg,
+.compact-btn svg,
+.compact-primary svg,
+.logout-btn svg,
+.row-tools svg {
+  display: block;
+}
+
+/* 상단바 좌측 햄버거 메뉴 버튼 — 화이트 배경의 작은 아이콘 버튼 */
+.workspace-brandbar .icon-btn {
+  width: 28px;
+  height: 28px;
+  border-color: transparent;
+}
+
+.workspace-brandbar .icon-btn.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-color: transparent;
+}
+
+/* 상단바 사용자 영역 — 아바타 + 이름 + 로그아웃 버튼 */
+.workspace-actions .user-name {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.logout-btn:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.logout-btn svg {
+  opacity: 0.85;
+}
+
+/* 주소 링크 — MapPin 아이콘 + 텍스트 + ExternalLink 아이콘 */
+.project-address {
+  gap: 5px;
+}
+
+.project-address .address-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.project-address svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.project-address:hover svg {
+  opacity: 1;
+}
+
+/* 사이드바 탭 — 아이콘 + 라벨 가로 배치 */
+.ws-tabbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ws-tabbar button svg {
+  opacity: 0.7;
+}
+
+.ws-tabbar button.active svg {
+  opacity: 1;
+}
+
+/* 패널 헤드 아이콘 박스 — SVG가 잘 보이도록 */
+.head-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.head-icon svg {
+  display: block;
+}
+
+/* 견적 비교 헤더 - 액션 그룹 + soft-badge + 업체 추가 버튼 정렬 */
+.quote-pane-head .quote-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.quote-pane-head .soft-badge,
+.quote-pane-head .compact-primary {
+  margin-left: 4px;
+}
+
+.compact-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+}
+
+/* 사진 비어있는 칸 — 아이콘 살짝 표시 */
+.photo-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border-strong);
+}
+
+.photo-slot svg {
+  opacity: 0.5;
+}
+
+/* 채택 마커 별 — 견적 매트릭스 항목 셀 안의 별 */
+.adopted-marker {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  color: #f59e0b;
+}
+
+.adopted-marker svg {
+  fill: currentColor;
+}
+
+/* 라인 카드의 채택 표시 안의 별 정렬 */
+.line-card .adopted svg {
+  fill: currentColor;
+  vertical-align: -1px;
+  margin-right: 2px;
+}
+
+/* 견적 추가/수정/삭제 버튼들 - 작은 아이콘 박스 */
+.quote-actions .icon-btn {
+  width: 26px;
+  height: 26px;
+}
+
+/* compact-btn (사진 업로드 등) - 아이콘+텍스트 */
+.compact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg);
+  border-color: var(--border-strong);
+  background: var(--bg-elev);
+}
+
+.compact-btn:hover {
+  background: var(--bg);
+}
+
+/* 앱 마크 안의 SVG (망치 아이콘) */
+.app-mark svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 상단바 모드 탭 — v1 의 탭 스위치 형태 */
+.mode-tabs {
+  border: 1px solid var(--border);
+}
+
+/* 1180 미디어쿼리에서 사용자 이름 숨기기 (좁은 화면) */
+@media (max-width: 1180px) {
+  .workspace-actions .user-name { display: none; }
+  .logout-btn span { display: none; }
+  .logout-btn { width: 28px; padding: 0; justify-content: center; }
+}

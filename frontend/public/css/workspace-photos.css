@@ -1,0 +1,316 @@
+.photos-panel {
+  flex-shrink: 0;
+}
+
+.space-detail-pane .photos-panel {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.photo-scope-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.photo-scope-tabs button {
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  padding: 0 9px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.photo-scope-tabs button:hover:not(:disabled),
+.photo-scope-tabs button.active {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: var(--brand);
+  color: #fff;
+}
+
+.photo-scope-tabs button:disabled {
+  opacity: 0.45;
+}
+
+.photo-panel-actions,
+.photo-toolbar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.photo-panel-actions {
+  gap: 6px;
+  margin-left: auto;
+}
+
+.photo-scope-tabs + .photo-panel-actions {
+  margin-left: 0;
+}
+
+.photo-toolbar {
+  gap: 4px;
+  border-right: 1px solid var(--border);
+  padding-right: 6px;
+}
+
+.photo-action-btn {
+  width: 24px;
+  height: 24px;
+  border-color: var(--border);
+  background: var(--bg-elev);
+  color: var(--fg);
+}
+
+.photo-action-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--bg);
+}
+
+.photo-action-btn.danger:not(:disabled) {
+  color: var(--danger);
+}
+
+.photo-action-btn.danger:hover:not(:disabled) {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: #fee2e2;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.space-photo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* 카드 비율은 .photo-card 의 aspect-ratio 가 4:3 으로 강제 — row 는 콘텐츠에 맞춰 모든 카드 동일 사이즈. */
+  grid-auto-rows: minmax(160px, auto);
+  flex: 1 1 0;
+  min-height: 0;
+  align-content: start;
+  gap: 14px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.space-photo-grid.has-extra-photos {
+  overflow-y: auto;
+}
+
+.photo-card,
+.photo-slot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e2e8f0, #fff);
+}
+
+.photo-card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.photo-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.photo-card.is-selected {
+  border-color: rgba(37, 99, 235, 0.85);
+  box-shadow:
+    0 0 0 2px rgba(37, 99, 235, 0.28),
+    0 8px 18px rgba(15, 23, 42, 0.14);
+}
+
+.photo-card.is-selected .zoomable-image > img {
+  transform: scale(1.02);
+}
+
+.photo-card {
+  width: 100%;
+  margin: 0;
+}
+
+.space-photo-grid .photo-card,
+.space-photo-grid .photo-slot {
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  min-block-size: 160px;
+  /* aspect-ratio 는 .photo-card 기본 4/3 을 그대로 사용 — 모든 카드 동일 사이즈. */
+  box-sizing: border-box;
+  contain: layout paint;
+}
+
+.photo-slot {
+  border-style: dashed;
+  background: rgba(241, 245, 249, 0.55);
+}
+
+.photo-slot-add,
+.photo-slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted, #94a3b8);
+}
+
+.photo-slot-add {
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.photo-slot-add:hover {
+  color: var(--brand, #3b82f6);
+  border-color: var(--brand, #3b82f6);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.photo-slot-empty {
+  background: rgba(248, 250, 252, 0.7);
+}
+
+/* 이미지 확대 트리거 — 평면도와 사진 카드 안에서 img 를 감싸는 button.
+   배경 투명 + photo-card 의 absolute 형제 (라벨, 캡션, 삭제 버튼) 위에 깔리지 않도록
+   z-index 0, hover 시 살짝 밝아지는 정도의 시각 cue 만. */
+.zoomable-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.zoomable-image > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.zoomable-image:hover > img {
+  transform: scale(1.02);
+}
+
+.zoomable-image:focus-visible {
+  outline: 2px solid var(--brand, #3b82f6);
+  outline-offset: -2px;
+}
+
+.photo-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-card > span {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  border-radius: 4px;
+  background: var(--brand);
+  padding: 3px 6px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.photo-card figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  background: rgba(15, 23, 42, 0.76);
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.photo-card figcaption small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.photo-select-control {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.26);
+  color: #fff;
+  padding: 0;
+  opacity: 0.78;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+}
+
+.photo-select-control:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.72);
+  opacity: 1;
+}
+
+.photo-select-control.is-selected {
+  border-color: rgba(29, 78, 216, 0.75);
+  background: var(--brand);
+  opacity: 1;
+}
+
+.photo-select-control.is-selected:hover {
+  background: #1d4ed8;
+}
+
+/* 외부 링크만 카드 hover/focus 시 보조 액션으로 노출한다. */
+.photo-card .photo-link {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.photo-card:hover .photo-link,
+.photo-card:focus-within .photo-link {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.photo-link {
+  position: absolute;
+  /* 체크박스(.photo-select-control) 와 같은 라인의 그 왼쪽. 체크박스 22px + 6px right + 4px gap = 32px. */
+  top: 6px;
+  right: 32px;
+  z-index: 3;
+  border-color: rgba(20, 184, 166, 0.28);
+  background: rgba(20, 184, 166, 0.92);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.20);
+}
+
+.photo-link:hover {
+  border-color: rgba(15, 118, 110, 0.42);
+  background: #0f766e;
+  color: #fff;
+}
+
+.wide-form .row {

@@ -1,0 +1,201 @@
+.line-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line-space-banner {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 7px;
+  background: #f0fdf4;
+  padding: 7px 9px;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+
+.line-space-banner:hover,
+.line-space-banner.active {
+  border-color: rgba(34, 197, 94, 0.48);
+  background: #dcfce7;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.line-space-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #14532d;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.line-space-meta {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #fff;
+  padding: 2px 6px;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.line-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-elev);
+  overflow: hidden;
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+
+/* hover 는 카드 전체 한 단위로. 분기를 두 곳에 두지 않는다. */
+.line-card:hover:not(.active) {
+  border-color: rgba(37, 99, 235, 0.3);
+  background: var(--bg);
+}
+
+.line-card.active {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+/* 본체 — 항목 선택용. 카드 hover/active 가 background 책임. */
+.line-card-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 8px;
+  padding: 9px 10px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* 채택 토글 버튼 — 우측 분리 영역.
+   분리선은 카드 보더 색 따라가도록 currentColor 가 아닌 inherit 가능한 약한 톤으로. */
+.line-adopt-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 12px;
+  border: 0;
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.line-card.active .line-adopt-toggle {
+  border-left-color: rgba(37, 99, 235, 0.18);
+}
+
+.line-adopt-toggle.is-undecided {
+  color: var(--muted);
+}
+
+.line-adopt-toggle.is-adopted {
+  background: var(--warning);
+  color: #451a03;
+}
+
+/* hover 는 채택 가능 + disabled 가 아닌 경우만. 미정 → brand soft, 채택됨 → 해제 hint. */
+.line-adopt-toggle.is-undecided:not(:disabled):hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.line-adopt-toggle.is-adopted:not(:disabled):hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.line-adopt-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.line-label {
+  overflow: hidden;
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.line-sku {
+  display: flex;
+  grid-column: 1 / 2;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.line-sku b,
+.line-sku em {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.line-sku b {
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.line-sku em {
+  background: #ecfdf5;
+  color: var(--success);
+}
+
+.quote-count {
+  grid-column: 2 / 3;
+  grid-row: 1 / span 2;
+  align-self: start;
+  border-radius: 4px;
+  background: var(--bg);
+  padding: 2px 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.adopted {
+  border-radius: 4px;
+  background: var(--warning);
+  padding: 2px 6px;
+  color: #451a03;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.undecided {
+  color: var(--muted);
+  font-size: 10px;
+}

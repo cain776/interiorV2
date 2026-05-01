@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.tmp/
+tmp/
+.env
+.env.local
+.env.*.local
+uploads/*
+!uploads/.gitkeep
+backups/*
+!backups/.gitkeep
+naver_blog_images/
+test2.png
+.DS_Store
+*.log

@@ -1,0 +1,589 @@
+/* ===== Modal ===== */
+#modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#modal-root[hidden] { display: none; }
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+
+.modal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border: 1px solid rgba(15, 23, 42, 0.28);
+  border-radius: 8px;
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+}
+
+.modal-card:has(.wide-form) {
+  width: 461px;
+}
+
+.modal-card:has(.compact-form) {
+  width: 403px;
+}
+
+/* 이미지 확대 모달 — 사진/평면도 클릭 시 띄움. 카드 자체를 화면 거의 가득 늘림. */
+.modal-card:has(.image-zoom-body) {
+  width: min(1100px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+}
+
+.image-zoom-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #0b1220;
+  overflow: auto;
+}
+
+.image-zoom-body img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 160px);
+  object-fit: contain;
+  border-radius: 6px;
+  background: #000;
+}
+
+.image-zoom-body figcaption {
+  color: #cbd5e1;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ===== 사진 업로드 모달 ===== */
+
+.modal-card:has(.photo-upload-form) {
+  width: min(680px, calc(100vw - 32px));
+}
+
+.photo-upload-form {
+  padding: 18px 20px 16px;
+  gap: 14px;
+}
+
+/* dropzone — 드래그 영역 + 파일 선택 + 미리보기 컨테이너 */
+.photo-dropzone {
+  position: relative;
+  display: block;
+  border: 2px dashed rgba(15, 23, 42, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+}
+
+.photo-dropzone:hover,
+.photo-dropzone:focus-within {
+  border-color: var(--brand, #3b82f6);
+}
+
+.photo-dropzone.is-dragover {
+  border-color: var(--brand, #3b82f6);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* 실제 파일 input — 시각적으로 숨김 */
+.photo-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.photo-dropzone-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 16px;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+}
+
+/* HTML [hidden] 속성이 위 display: flex 에 덮이지 않도록 명시 우선. */
+.photo-dropzone-empty[hidden],
+.photo-dropzone-preview[hidden] {
+  display: none;
+}
+
+.photo-dropzone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--brand, #3b82f6);
+}
+
+.photo-dropzone-empty strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.photo-dropzone-empty small {
+  font-size: 11px;
+  color: var(--muted, #94a3b8);
+}
+
+/* 선택 후 미리보기 */
+.photo-dropzone-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+}
+
+.photo-dropzone-preview img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.photo-dropzone-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.photo-dropzone-meta strong {
+  font-size: 13px;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-dropzone-meta small {
+  font-size: 11px;
+  color: var(--muted, #94a3b8);
+}
+
+.photo-dropzone-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: #fff;
+  color: var(--muted, #94a3b8);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.photo-dropzone-clear:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* 종류 칩 라디오 */
+.photo-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.photo-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.photo-kind-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.photo-kind-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  user-select: none;
+}
+
+.photo-kind-chip:hover:not(.is-selected) {
+  border-color: var(--brand, #3b82f6);
+  background: var(--brand, #3b82f6);
+  color: #fff;
+}
+
+.photo-kind-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photo-kind-chip.is-selected,
+.photo-kind-chip.is-selected:hover {
+  background: var(--brand, #3b82f6);
+  border-color: var(--brand, #3b82f6);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .photo-kind-chips {
+    flex-wrap: wrap;
+  }
+
+}
+
+/* 업로드 버튼 — 아이콘 + 텍스트 */
+.photo-upload-form .form-actions .primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-card > h3 {
+  display: flex;
+  min-height: 50px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  border-bottom: 0;
+  background: #071423;
+  padding: 0 18px 0 20px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.modal-title-main {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.modal-title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-color: transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.modal-card > form {
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+}
+
+.modal-card .form {
+  gap: 13px;
+}
+
+.modal-card .form label > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.form-help {
+  margin: 0;
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.modal-card .form .photo-kind-chip > span {
+  color: inherit;
+  font-size: 12px;
+  font-weight: inherit;
+}
+
+.modal-card .form .photo-kind-chip:hover > span,
+.modal-card .form .photo-kind-chip.is-selected > span {
+  color: #fff;
+}
+
+.modal-card input,
+.modal-card select,
+.modal-card textarea {
+  min-height: 36px;
+}
+
+.modal-card select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) 50%,
+    calc(100% - 15px) 50%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px, 5px 5px;
+}
+
+.modal-card select:focus {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--brand) 50%),
+    linear-gradient(135deg, var(--brand) 50%, transparent 50%);
+}
+
+.modal-card textarea {
+  line-height: 1.45;
+}
+
+.modal-card .form-actions {
+  position: sticky;
+  bottom: -18px;
+  margin: 6px -18px -18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 12px 18px;
+}
+
+.modal-card .error:not([hidden]) {
+  margin: 0;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 6px;
+  background: #fef2f2;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.photo-upload-form {
+  gap: 12px;
+}
+
+.photo-upload-banner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -2px 0 2px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 7px;
+  background: #fffbeb;
+  padding: 9px 11px;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.photo-upload-banner strong {
+  color: var(--fg);
+  font-weight: 800;
+}
+
+.photo-upload-field,
+.photo-kind-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.photo-file-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.photo-dropzone {
+  display: flex;
+  min-height: 148px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--muted);
+  padding: 22px;
+  text-align: center;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.photo-dropzone:hover,
+.photo-dropzone.drag-over {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.photo-dropzone-icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: #64748b;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.photo-dropzone:hover .photo-dropzone-icon,
+.photo-dropzone.drag-over .photo-dropzone-icon {
+  color: var(--brand);
+}
+
+.photo-dropzone-title {
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.photo-dropzone-help {
+  font-size: 10px;
+}
+
+/* photo-upload-preview / photo-dropzone — HTML hidden 속성 강제. */
+.photo-upload-preview[hidden],
+.photo-dropzone[hidden] {
+  display: none;
+}
+
+.photo-upload-preview {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: var(--bg-elev);
+}
+
+.photo-upload-preview img {
+  display: block;
+  width: 100%;
+  max-height: 230px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.photo-preview-clear {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--fg);
+  padding: 0;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.photo-preview-clear:hover {
+  background: #fff;
+  color: var(--danger);
+}
+
+.photo-preview-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.photo-preview-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,235 @@
+.quote-pane-head {
+  min-width: 0;
+  gap: 8px;
+}
+
+.quote-pane-head h2 {
+  flex-shrink: 0;
+}
+
+.quote-actions {
+  gap: 2px;
+  margin-left: auto;
+}
+
+.vendor-filter-bar {
+  display: flex;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0 20px;
+}
+
+.vendor-filter-bar > span {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chip {
+  display: inline-flex;
+  height: 24px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 0 9px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.chip small {
+  color: inherit;
+  opacity: 0.70;
+}
+
+.chip.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.chip.active.soft {
+  border-color: rgba(37, 99, 235, 0.30);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.quote-pane-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.quote-matrix {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+}
+
+.quote-matrix-inner {
+  display: flex;
+  min-width: max-content;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.quote-row {
+  display: grid;
+  grid-template-columns: var(--quote-grid);
+  min-width: max-content;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-row > span {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  padding: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.quote-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(248, 250, 252, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.quote-head > span {
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.quote-head > .vendor-head-cell {
+  min-height: 36px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  text-align: right;
+}
+
+.vendor-head-cell strong,
+.vendor-head-cell small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendor-head-cell small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.vendor-head-cell .vendor-rating {
+  display: inline;
+  color: var(--fg);
+  font-size: 9px;
+}
+
+.quote-row.active {
+  background: var(--brand-soft);
+}
+
+.quote-row:hover:not(.quote-head):not(.quote-foot) {
+  background: #f8fafc;
+}
+
+.quote-row .item-cell {
+  font-weight: 700;
+}
+
+.quote-row .num {
+  justify-content: flex-end;
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.quote-row .price-cell.selected {
+  font-weight: 700;
+}
+
+.quote-row .price-cell.adopted {
+  border-radius: 0;
+  background: #fef3c7;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+.price-cell b {
+  margin-right: 4px;
+  border-radius: 3px;
+  background: var(--warning);
+  padding: 2px 4px;
+  color: #451a03;
+  font-family: var(--font-sans, inherit);
+  font-size: 9px;
+}
+
+.quote-price-display {
+  display: inline-flex;
+  width: 100%;
+  height: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+.quote-price-display:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.quote-price-empty {
+  display: inline-flex;
+  width: 100%;
+  height: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--muted);
+}
+
+.quote-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: auto;
+  border-bottom: 0;
+  border-top: 2px solid var(--border);
+  background: rgba(241, 245, 249, 0.96);
+  backdrop-filter: blur(8px);
+  font-weight: 700;
+}
+
+.quote-foot .total-label {
+  grid-column: span 6;
+  color: var(--muted);
+  text-transform: uppercase;
+}

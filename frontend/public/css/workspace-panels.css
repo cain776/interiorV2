@@ -1,0 +1,242 @@
+.ws-main-head,
+.quote-pane-head {
+  display: flex;
+  height: var(--workspace-panel-head-height);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0 12px;
+}
+
+.ws-main-head {
+  justify-content: space-between;
+}
+
+.ws-main-head h2,
+.quote-pane-head h2 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.head-left { gap: 8px; }
+.head-metrics { gap: 8px; margin-left: auto; }
+
+.badge,
+.soft-badge,
+.metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elev);
+  padding: 2px 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.soft-badge {
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.soft-badge.brand,
+.mini-count.brand,
+.head-icon.brand {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.soft-badge.success,
+.mini-count.success,
+.head-icon.success {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.metric strong {
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.metric.warn {
+  background: #fffbeb;
+}
+
+.ws-main-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 16px;
+  overflow: hidden;
+  padding: 16px 16px 16px 0;
+}
+
+.mini-panel {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sm);
+}
+
+.considerations-panel {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.line-items-panel {
+  min-width: 0;
+  flex: 1;
+}
+
+.space-management-grid .ws-main-body {
+  display: grid;
+  grid-template-columns:
+    minmax(var(--space-management-considerations-panel-width), 1.12fr)
+    minmax(var(--space-management-line-items-panel-width), 1fr);
+}
+
+.space-management-grid .considerations-panel,
+.space-management-grid .line-items-panel {
+  width: auto;
+  min-width: 0;
+}
+
+.quote-pane-v1.space-detail-pane {
+  --space-compact-panel-height: 112px;
+  gap: 16px;
+  padding: 16px 16px 16px 0;
+}
+
+.space-size-panel {
+  height: var(--space-compact-panel-height);
+  flex: 0 0 var(--space-compact-panel-height);
+}
+
+.space-size-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+}
+
+.space-size-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.space-size-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 7px;
+  text-align: right;
+}
+
+.space-size-card.primary {
+  background: var(--brand-soft);
+}
+
+.space-size-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: left;
+}
+
+.space-size-card strong {
+  display: block;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .space-size-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel-head {
+  display: flex;
+  height: var(--workspace-panel-head-height);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+  background: var(--bg);
+}
+
+.panel-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.head-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.head-icon.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.empty-dashed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 86px;
+  margin: 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.empty-dashed.grow {
+  min-height: 100%;
