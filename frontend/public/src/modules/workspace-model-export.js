@@ -1,13 +1,18 @@
 // 3D 모델 생성기로 넘길 데이터와 SketchUp Ruby 스크립트 생성.
 
-import { pyeongToSqm } from "./workspace-format.js";
 import {
   getPhotosForSpace,
   isWholeHomeSpaceId,
-  sortByOrder,
+  modelRooms,
+  wholeHomeRoom,
   WHOLE_HOME_SPACE_ID,
 } from "./workspace-selectors.js";
 import { uniquePhotos } from "./workspace-views-photos.js";
+
+// SketchUp 브리지 — 로컬에서 떠 있는 SketchUp 플러그인이 수신하는 endpoint.
+// 가족 다른 PC 에서 포트가 다를 경우를 대비해 한 곳에 묶음.
+// 기본값은 SketchUp Ruby Bridge 의 관용 포트.
+const SKETCHUP_BRIDGE_ENDPOINT = "http://127.0.0.1:43434/command";
 
 /** @typedef {import("./workspace.js").WorkspaceState} WorkspaceState */
 /** @typedef {import("../api.js").LineItem} LineItem */
@@ -117,32 +122,12 @@ model.active_view.zoom_extents
 /** @param {WorkspaceState} s */
 export function buildSketchUpBridgeCommand(s) {
   return {
-    endpoint: "http://127.0.0.1:43434/command",
+    endpoint: SKETCHUP_BRIDGE_ENDPOINT,
     method: "POST",
     body: {
       command: "generate_model",
       payload: buildModelPayload(s),
     },
-  };
-}
-
-/** @param {WorkspaceState} s */
-function modelRooms(s) {
-  return sortByOrder(s.bundle.spaces).filter((space) => !isWholeHomeSpaceId(space.id));
-}
-
-/** @param {WorkspaceState} s */
-function wholeHomeRoom(s) {
-  const sizeKr = s.bundle.project.sizeKr;
-  const areaSqm = typeof sizeKr === "number" ? Number(pyeongToSqm(sizeKr).toFixed(2)) : null;
-  return {
-    id: WHOLE_HOME_SPACE_ID,
-    projectId: s.bundle.project.id,
-    name: "전체 모델",
-    areaSqm,
-    sortOrder: -1,
-    createdAt: s.bundle.project.createdAt,
-    updatedAt: s.bundle.project.updatedAt,
   };
 }
 

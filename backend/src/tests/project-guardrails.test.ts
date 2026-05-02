@@ -209,3 +209,119 @@ test("sensitive status changes are audited (contract / payment / change_order / 
   assert.match(changeOrders, /audit\(req,\s*"change_order\.update"/);
   assert.match(quotes, /audit\(req,\s*"quote\.select"/);
 });
+
+// ===== Tier 2 메타 가드레일 — 신규 라우트가 자동으로 검증되도록. =====
+
+/**
+ * 라우트 파일별 인증 정책 등록.
+ * 신규 라우트 추가 시 여기에 등록 + 라우트 파일에 정책 표시(주석/preHandler) 둘 다 일치해야 통과.
+ *
+ * - "public": 인증 불필요 (health, auth)
+ * - "auth":   세션 로그인 필요 (대부분의 자식 리소스)
+ * - "admin":  admin role 강제
+ */
+const ROUTE_AUTH_POLICY: Record<string, "public" | "auth" | "admin"> = {
+  "health.routes.ts": "public",
+  "auth.routes.ts": "public", // 라우트 단위 회원가입/로그인은 public, /me 와 /logout 은 자체 검사
+  "users.routes.ts": "admin",
+  "projects.routes.ts": "auth",
+  "vendors.routes.ts": "auth",
+  "phases.routes.ts": "auth",
+  "spaces.routes.ts": "auth",
+  "line-items.routes.ts": "auth",
+  "quotes.routes.ts": "auth",
+  "contracts.routes.ts": "auth",
+  "payments.routes.ts": "auth",
+  "change-orders.routes.ts": "auth",
+  "as-tickets.routes.ts": "auth",
+  "attachments.routes.ts": "auth",
+  "review-materials.routes.ts": "auth",
+};
+
+test("[meta] 모든 라우트 파일이 ROUTE_AUTH_POLICY 에 등록되어 있다", async () => {
+  const routeDir = join(projectRoot, "backend/src/routes");
+  const files = (await readdir(routeDir)).filter((f) => f.endsWith(".routes.ts"));
+  for (const file of files) {
+    assert.ok(
+      file in ROUTE_AUTH_POLICY,
+      `${file} 가 ROUTE_AUTH_POLICY 에 없음. project-guardrails.test.ts 의 ROUTE_AUTH_POLICY 에 정책 등록 필요.`,
+    );
+  }
+});
+
+test("[meta] 라우트 파일이 인증 정책에 맞는 가드를 등록한다", async () => {
+  const routeDir = join(projectRoot, "backend/src/routes");
+  for (const [file, policy] of Object.entries(ROUTE_AUTH_POLICY)) {
+    const source = stripComments(await readFile(join(routeDir, file), "utf8"));
+    if (policy === "public") {
+      // public 라우트: 명시적 requireAuth/requireAdmin 등록이 없어야 (auth 의 me/logout 같은 부분은 핸들러 안에서 자체 검사).
+      // auth.routes.ts 는 일부 핸들러에서 requireAuth 등 가능하나 plugin 단위 hook 은 금지.
+      assert.doesNotMatch(
+        source,
+        /app\.addHook\("preHandler",\s*requireAdmin\)/,
+        `${file}: public 정책인데 requireAdmin preHandler 가 등록됨`,
+      );
+    }
+    if (policy === "auth") {
+      assert.match(
+        source,
+        /app\.addHook\("preHandler",\s*requireAuth\)/,
+        `${file}: auth 정책 라우트는 plugin 시작에서 requireAuth preHandler 등록 필요`,
+      );
+    }
+    if (policy === "admin") {
+      assert.match(
+        source,
+        /app\.addHook\("preHandler",\s*requireAuth\)/,
+        `${file}: admin 정책도 requireAuth 가 먼저 등록되어야 함`,
+      );
+      assert.match(
+        source,
+        /app\.addHook\("preHandler",\s*requireAdmin\)/,
+        `${file}: admin 정책은 requireAdmin preHandler 등록 필요. 누락 시 권한 상승 사고 위험.`,
+      );
+    }
+  }
+});
+
+test("[meta] 모든 mutation 라우트는 fastify schema 검증을 등록한다", async () => {
+  // POST/PATCH 라우트가 { schema: ... } 옵션 없이 등록되면 입력 검증 누락 → 400/타입 안전성 결함.
+  // 정규식: app.(post|patch)<...>("/api/...", ASYNC_HANDLER) 패턴이 schema 키 없이 끝나는 경우 잡음.
+  // false positive 줄이기 위해 ApiResponse 검증과 별도로, 핸들러 옵션 객체에 "schema" 키 등장 여부만 체크.
+  const routeDir = join(projectRoot, "backend/src/routes");
+  const files = (await readdir(routeDir)).filter((f) => f.endsWith(".routes.ts"));
+  for (const file of files) {
+    if (file === "health.routes.ts") continue; // body 없음
+    const source = stripComments(await readFile(join(routeDir, file), "utf8"));
+    const mutationCalls = source.match(/app\.(post|patch)\b[\s\S]*?(?=app\.|export default|$)/g) ?? [];
+    for (const block of mutationCalls) {
+      // body 가 없는 단순 액션 (ex: /api/auth/logout, /api/quotes/{id}/select) 는 schema 생략 가능.
+      // Body 제네릭이 있거나 requestBody 가 있어 body 받는 경우만 검사.
+      if (!/Body:\s*\w+Body\b/.test(block)) continue;
+      assert.match(
+        block,
+        /\{\s*schema:/,
+        `${file}: Body 가 있는 mutation 에 fastify schema 검증 누락. `
+          + `라우트 옵션에 { schema: { body: xxxBody } } 추가 필요.`,
+      );
+    }
+  }
+});
+
+test("[meta] 모든 라우트가 ApiResponse 패턴(ok)으로 응답한다", async () => {
+  // { ok: true, data: ... } / { ok: false, error: ... } 패턴 강제.
+  // reply.send(...) / reply.code(...).send(...) 호출 시 첫 인자가 ok 키 없는 객체면 위반.
+  // 헬퍼 함수의 단순 return 은 라우트 응답이 아니므로 검사 대상 제외 (false positive 방지).
+  const routeDir = join(projectRoot, "backend/src/routes");
+  const files = (await readdir(routeDir)).filter((f) => f.endsWith(".routes.ts"));
+  for (const file of files) {
+    const source = stripComments(await readFile(join(routeDir, file), "utf8"));
+    const sendCalls = source.match(/\.send\(\s*\{[^}]*\}/g) ?? [];
+    for (const expr of sendCalls) {
+      if (/\bok\s*:/.test(expr)) continue;
+      assert.fail(
+        `${file}: reply.send(...) 의 첫 인자에 ok 키 누락 — ${expr.slice(0, 100)}`,
+      );
+    }
+  }
+});

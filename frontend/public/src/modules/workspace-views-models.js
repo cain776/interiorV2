@@ -9,7 +9,8 @@ import {
   currentSpace,
   getPhotosForSpace,
   isWholeHomeSpaceId,
-  sortByOrder,
+  modelRooms,
+  wholeHomeRoom,
   WHOLE_HOME_SPACE_ID,
 } from "./workspace-selectors.js";
 import { uniquePhotos } from "./workspace-views-photos.js";
@@ -222,6 +223,9 @@ function renderGenerationPanel(summary) {
       <button class="compact-btn" data-action="ws-open-sketchup-bridge">
         ${iUpload({ size: 12 })}<span>브릿지 명령</span>
       </button>
+      <button class="compact-btn primary" data-action="ws-send-sketchup-bridge">
+        ${iUpload({ size: 12 })}<span>SketchUp으로 보내기</span>
+      </button>
     </section>
   `;
 }
@@ -311,26 +315,6 @@ function renderStat(label, value) {
 /** @param {string} icon @param {string} label */
 function renderPipelineItem(icon, label) {
   return `<div class="model-pipeline-item"><span>${icon}</span><strong>${esc(label)}</strong></div>`;
-}
-
-/** @param {WorkspaceState} s */
-function modelRooms(s) {
-  return sortByOrder(s.bundle.spaces).filter((space) => !isWholeHomeSpaceId(space.id));
-}
-
-/** @param {WorkspaceState} s */
-function wholeHomeRoom(s) {
-  const sizeKr = s.bundle.project.sizeKr;
-  const areaSqm = typeof sizeKr === "number" ? Number((sizeKr * 3.305785).toFixed(2)) : null;
-  return {
-    id: WHOLE_HOME_SPACE_ID,
-    projectId: s.bundle.project.id,
-    name: "전체 모델",
-    areaSqm,
-    sortOrder: -1,
-    createdAt: s.bundle.project.createdAt,
-    updatedAt: s.bundle.project.updatedAt,
-  };
 }
 
 /**

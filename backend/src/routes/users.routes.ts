@@ -126,12 +126,13 @@ export default async function usersRoutes(app: FastifyInstance): Promise<void> {
           fieldErrors: { email: "이미 가입된 이메일입니다." },
         });
       }
+      const passwordChanged = Boolean(req.body.password);
       const result = await updateUserGuardingLastLoginAdmin(req.params.id, {
         email,
         name,
         role: req.body.role,
         canLogin: req.body.canLogin,
-        passwordHash: req.body.password ? await hashPassword(req.body.password) : undefined,
+        passwordHash: passwordChanged ? await hashPassword(req.body.password!) : undefined,
       });
       if (!result.ok && result.reason === "last_login_admin") {
         return reply.code(400).send({ ok: false, error: "로그인 가능한 관리자는 최소 1명 필요합니다." });
@@ -139,7 +140,27 @@ export default async function usersRoutes(app: FastifyInstance): Promise<void> {
       if (!result.ok) {
         return reply.code(404).send({ ok: false, error: "사용자를 찾을 수 없습니다." });
       }
-      await audit(req, "user.update", "user", result.user.id);
+      // role / canLogin 변경은 권한 영향이 커서 before/after diff 를 명시 기록.
+      // password 는 별도 audit 액션으로 분리 — 누가 누구의 비번을 리셋했는지 추적 명확화.
+      const diff = {
+        ...(req.body.role !== undefined && req.body.role !== existing.role
+          ? { role: { before: existing.role, after: req.body.role } }
+          : {}),
+        ...(req.body.canLogin !== undefined && req.body.canLogin !== existing.canLogin
+          ? { canLogin: { before: existing.canLogin, after: req.body.canLogin } }
+          : {}),
+        ...(email && email !== existing.email
+          ? { email: { before: existing.email, after: email } }
+          : {}),
+      };
+      await audit(req, "user.update", "user", result.user.id, Object.keys(diff).length > 0 ? diff : undefined);
+      if (passwordChanged) {
+        // admin 이 다른 사용자(또는 본인)의 비번을 리셋한 경우. self-service 변경은 /api/auth/password 의 user.password_change.
+        await audit(req, "user.password_reset", "user", result.user.id, {
+          target: result.user.email,
+          self: result.user.id === userId(req),
+        });
+      }
       return { ok: true, data: publicUser(result.user) };
     },
   );

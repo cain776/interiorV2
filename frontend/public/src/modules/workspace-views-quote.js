@@ -1,7 +1,7 @@
 // 견적 비교 매트릭스 패널.
 
 import { esc } from "../dom.js";
-import { iBuilding, iPencil, iTrash, iCheck, iPlus, iStar } from "./icons.js";
+import { iBuilding, iPencil, iTrash, iCheck, iPlus, iStar, iX } from "./icons.js";
 import {
   currentLineItems,
   visibleQuotes,
@@ -79,7 +79,7 @@ function renderVendorFilterBar(s, activeVendors, visibleVendorIds) {
               <button class="chip-main" data-action="ws-toggle-vendor" data-id="${esc(vendor.id)}">
                 ${esc(vendor.name)} <small>${esc(vendor.specialty ?? "")}</small>${vendor.rating ? ` ★${vendor.rating}` : ""}
               </button>
-              ${active ? `<button class="chip-remove" data-action="ws-remove-vendor" data-id="${esc(vendor.id)}" title="업체 빼기" aria-label="${esc(vendor.name)} 업체 빼기">x</button>` : ""}
+              ${active ? `<button class="chip-remove" data-action="ws-remove-vendor" data-id="${esc(vendor.id)}" title="업체 빼기" aria-label="${esc(vendor.name)} 업체 빼기">${iX({ size: 11, strokeWidth: 2.4 })}</button>` : ""}
             </span>
           `;
         })

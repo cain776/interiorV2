@@ -346,6 +346,7 @@ async function handleAsyncAction(action, id, trigger, state, render, reloadBundl
   if (action === "ws-open-model-payload") return openModelPayload(state);
   if (action === "ws-open-sketchup-ruby") return openSketchUpRuby(state);
   if (action === "ws-open-sketchup-bridge") return openSketchUpBridge(state);
+  if (action === "ws-send-sketchup-bridge") return sendSketchUpBridge(state);
   if (action === "ws-open-photo") return openPhotoModal(state, render);
   if (action === "ws-edit-photo" && id) return openPhotoEditModal(state, id, render);
   if (action === "ws-move-photo" && id) return movePhoto(state, id, trigger.dataset.direction, render);
@@ -355,6 +356,18 @@ async function handleAsyncAction(action, id, trigger, state, render, reloadBundl
     if (src) openImageZoom(src, trigger.dataset.imageAlt ?? "");
     return;
   }
+}
+
+/** @param {WorkspaceState} state */
+async function sendSketchUpBridge(state) {
+  const command = buildSketchUpBridgeCommand(state);
+  const result = await api.sketchupBridge.command(command.body);
+  if (!result.ok) {
+    showToast("SketchUp 브릿지 연결 실패: Ruby 브릿지를 먼저 로드해 주세요.", { kind: "error" });
+    return;
+  }
+  const rooms = result.data.generatedRooms ?? 0;
+  showToast(`SketchUp으로 ${rooms}개 공간을 보냈습니다.`, { kind: "success" });
 }
 
 /** @param {WorkspaceState} state */

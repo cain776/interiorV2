@@ -7,7 +7,13 @@ const projectRoot = resolve(__dirname, "../../..");
 const uploadRoot = resolve(projectRoot, "uploads");
 const vendorPhotoDir = resolve(uploadRoot, "vendor-profiles");
 const PUBLIC_PREFIX = "/uploads/vendor-profiles/";
-const MAX_VENDOR_PHOTO_BYTES = 2_000_000;
+
+// 업체 프로필 사진 — 단일 진실 공급원.
+// fastify schema(maxLength)는 이 값을 base64 팽창 ~1.34× 적용해 사용.
+// schema 한도와 실제 디코딩 한도가 어긋나면 클라이언트가 schema는 통과한 후 디코딩에서 거부되는
+// 모호한 UX 가 나오므로 한 곳에 묶음.
+export const MAX_VENDOR_PHOTO_BYTES = 2_000_000;
+export const VENDOR_PHOTO_DATA_URL_MAX_LENGTH = Math.ceil(MAX_VENDOR_PHOTO_BYTES * 1.34) + 100;
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",

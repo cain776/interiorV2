@@ -305,3 +305,30 @@ function wholeHomeSpace(s) {
     updatedAt: s.bundle.project.updatedAt,
   };
 }
+
+/**
+ * 3D 모델 입력으로 쓸 실제 공간 (전체 가상 공간 제외, sortOrder 정렬).
+ * @param {WorkspaceState} s @returns {Space[]}
+ */
+export function modelRooms(s) {
+  return sortByOrder(s.bundle.spaces).filter((space) => !isWholeHomeSpaceId(space.id));
+}
+
+/**
+ * 3D 모델 export 용 "전체" 가상 공간. wholeHomeSpace 와 거의 동일하지만 name 만 다름
+ * (모델 컨텍스트에선 "전체 모델" 라벨이 자연스러움).
+ * @param {WorkspaceState} s @returns {Space}
+ */
+export function wholeHomeRoom(s) {
+  const sizeKr = s.bundle.project.sizeKr;
+  const areaSqm = typeof sizeKr === "number" ? Number(pyeongToSqm(sizeKr).toFixed(2)) : null;
+  return {
+    id: WHOLE_HOME_SPACE_ID,
+    projectId: s.bundle.project.id,
+    name: "전체 모델",
+    areaSqm,
+    sortOrder: -1,
+    createdAt: s.bundle.project.createdAt,
+    updatedAt: s.bundle.project.updatedAt,
+  };
+}

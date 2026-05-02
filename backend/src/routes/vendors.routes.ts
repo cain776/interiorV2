@@ -4,6 +4,7 @@ import { audit } from "../lib/audit.js";
 import {
   removeVendorPhoto,
   saveVendorPhotoDataUrl,
+  VENDOR_PHOTO_DATA_URL_MAX_LENGTH,
 } from "../lib/vendor-photo.js";
 import {
   createVendor,
@@ -24,7 +25,7 @@ const vendorBodyProps = {
   mobilePhone: { type: ["string", "null"], maxLength: 50 },
   photoDataUrl: {
     type: ["string", "null"],
-    maxLength: 3_000_000,
+    maxLength: VENDOR_PHOTO_DATA_URL_MAX_LENGTH,
     pattern: "^data:image/(png|jpeg|webp|gif);base64,",
   },
   email: { type: ["string", "null"], maxLength: 200 },

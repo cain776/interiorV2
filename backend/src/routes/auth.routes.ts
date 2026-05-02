@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { hashPassword, verifyPassword } from "../lib/auth.js";
 import { audit } from "../lib/audit.js";
-import { countUsers, createUser, findUserByEmail, findUserById } from "../repos/users.repo.js";
+import { countUsers, createUser, findUserByEmail, findUserById, updateUser } from "../repos/users.repo.js";
 import type { PublicUser, User } from "../types/domain.js";
 
 function publicUser(u: User): PublicUser {
@@ -48,6 +48,27 @@ const loginSchema = {
     },
   },
 } as const;
+
+// 본인 비밀번호 변경 — admin 의 password 리셋(`PATCH /api/users/{id}`) 과 분리.
+// 가족 공유 단계에서 customer/vendor 가 admin 호출 없이 자기 비번 갱신할 수 있어야 한다.
+const passwordChangeSchema = {
+  body: {
+    type: "object",
+    required: ["currentPassword", "newPassword"],
+    additionalProperties: false,
+    properties: {
+      currentPassword: { type: "string", minLength: 1, maxLength: 200 },
+      newPassword: { type: "string", minLength: 8, maxLength: 200 },
+    },
+  },
+} as const;
+
+const passwordChangeRateLimit = {
+  rateLimit: {
+    max: 5,
+    timeWindow: "10 minutes",
+  },
+};
 
 export default async function authRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: { email: string; password: string; name: string } }>(
@@ -150,4 +171,44 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
     }
     return { ok: true, data: publicUser(user) };
   });
+
+  // 본인 비밀번호 변경. admin 의 임의 사용자 password 리셋은 PATCH /api/users/{id}.
+  // - 현재 비번 검증 필수 (세션 탈취 시 무력화 차단)
+  // - rate-limit 5회/10분 (login 보다 더 빡빡 — 정상 사용자는 자주 안 바꿈)
+  // - 성공 시 별도 audit action `user.password_change` (admin 의 password reset 과 구분)
+  app.post<{ Body: { currentPassword: string; newPassword: string } }>(
+    "/api/auth/password",
+    { schema: passwordChangeSchema, config: passwordChangeRateLimit },
+    async (req, reply) => {
+      const userId = req.session.userId;
+      if (!userId) {
+        return reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
+      }
+      const user = await findUserById(userId);
+      if (!user || !user.canLogin) {
+        await req.session.destroy();
+        return reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
+      }
+      const valid = await verifyPassword(req.body.currentPassword, user.passwordHash);
+      if (!valid) {
+        await audit(req, "login.fail", "user", user.id, { reason: "password_change_bad_current" });
+        return reply.code(400).send({
+          ok: false,
+          error: "현재 비밀번호가 올바르지 않습니다.",
+          fieldErrors: { currentPassword: "현재 비밀번호가 올바르지 않습니다." },
+        });
+      }
+      if (req.body.currentPassword === req.body.newPassword) {
+        return reply.code(400).send({
+          ok: false,
+          error: "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
+          fieldErrors: { newPassword: "현재 비밀번호와 다르게 입력해주세요." },
+        });
+      }
+      const passwordHash = await hashPassword(req.body.newPassword);
+      await updateUser(user.id, { passwordHash });
+      await audit(req, "user.password_change", "user", user.id);
+      return { ok: true, data: { ok: true } };
+    },
+  );
 }

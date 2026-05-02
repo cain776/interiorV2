@@ -167,6 +167,12 @@
   margin-top: 6px;
 }
 
+.model-generation-panel .compact-btn.primary {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
 .model-payload-preview {
   max-height: 420px;
   overflow: auto;

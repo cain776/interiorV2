@@ -301,10 +301,53 @@ function send(path, method, body) {
   });
 }
 
+const SKETCHUP_BRIDGE_ENDPOINT = "http://127.0.0.1:43434/command";
+const LOCAL_BRIDGE_TIMEOUT_MS = 2500;
+
+/**
+ * @template T
+ * @param {string} endpoint
+ * @param {unknown} body
+ * @returns {Promise<ApiResult<T>>}
+ */
+async function sendExternalJson(endpoint, body) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LOCAL_BRIDGE_TIMEOUT_MS);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "omit",
+      signal: controller.signal,
+      body: JSON.stringify(body),
+    });
+    const text = await response.text();
+    /** @type {ApiResult<T>} */
+    const parsed = text ? JSON.parse(text) : { ok: true, data: {} };
+    return parsed;
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error && err.name !== "AbortError"
+        ? err.message
+        : "로컬 SketchUp 브릿지에 연결할 수 없습니다.",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export const api = {
   health: () => /** @type {Promise<ApiResult<{ status: string, time: string }>>} */ (
     request("/api/health")
   ),
+
+  sketchupBridge: {
+    /** @param {unknown} command */
+    command: (command) => /** @type {Promise<ApiResult<{ generatedRooms?: number, status?: string }>>} */ (
+      sendExternalJson(SKETCHUP_BRIDGE_ENDPOINT, command)
+    ),
+  },
 
   auth: {
     /** @param {{ email: string, password: string, name: string }} input */
