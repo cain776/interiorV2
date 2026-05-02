@@ -20,6 +20,12 @@ export {
 } from "./workspace-modals-structure.js";
 
 export {
+  reorderConsideration,
+  reorderLineItem,
+  reorderSidebarItem,
+} from "./workspace-reorder.js";
+
+export {
   openQuoteModal,
   deleteSelectedQuote,
   adoptSelectedQuote,

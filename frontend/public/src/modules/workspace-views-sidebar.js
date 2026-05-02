@@ -55,15 +55,20 @@ function renderTimelineItem(s, counts, item, selectedId) {
   const progress = total > 0 ? Math.round((selected / total) * 100) : 0;
   const active = item.id === selectedId;
   const label = "areaSqm" in item && item.areaSqm ? `${item.name} ${formatArea(item.areaSqm)}㎡` : item.name;
+  const canDrag = !(s.tab === "spaces" && isWholeHomeSpaceId(item.id));
+  const dropAttrs = canDrag ? `data-drop-kind="sidebar" data-id="${esc(item.id)}"` : "";
   return `
-    <button class="timeline-item ${active ? "active" : ""}" data-action="${s.tab === "phases" ? "ws-select-phase" : "ws-select-space"}" data-id="${esc(item.id)}">
-      <span class="timeline-dot"></span>
-      <span class="timeline-content">
-        <span class="timeline-name">${esc(label)}</span>
-        ${total > 0 ? `<span class="timeline-count">${selected}/${total}</span>` : ""}
-        ${total > 0 ? `<span class="timeline-progress"><span style="width:${progress}%"></span></span>` : ""}
-      </span>
-    </button>
+    <div class="timeline-item ${active ? "active" : ""}" ${dropAttrs}>
+      <button type="button" class="drag-handle timeline-drag-handle" draggable="${canDrag ? "true" : "false"}" data-drag-kind="sidebar" data-id="${esc(item.id)}" ${canDrag ? "" : "disabled"} title="드래그해서 순서 변경" aria-label="${esc(label)} 순서 변경">⋮⋮</button>
+      <button type="button" class="timeline-item-main" data-action="${s.tab === "phases" ? "ws-select-phase" : "ws-select-space"}" data-id="${esc(item.id)}">
+        <span class="timeline-dot"></span>
+        <span class="timeline-content">
+          <span class="timeline-name">${esc(label)}</span>
+          ${total > 0 ? `<span class="timeline-count">${selected}/${total}</span>` : ""}
+          ${total > 0 ? `<span class="timeline-progress"><span style="width:${progress}%"></span></span>` : ""}
+        </span>
+      </button>
+    </div>
   `;
 }
 

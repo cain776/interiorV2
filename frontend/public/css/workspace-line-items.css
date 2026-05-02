@@ -50,8 +50,9 @@
 }
 
 .line-card {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   width: 100%;
   align-items: stretch;
   border: 1px solid var(--border);
@@ -59,6 +60,10 @@
   background: var(--bg-elev);
   overflow: hidden;
   transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+
+.line-drag-handle {
+  border-right: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 /* hover 는 카드 전체 한 단위로. 분기를 두 곳에 두지 않는다. */
@@ -105,6 +110,10 @@
 
 .line-card.active .line-adopt-toggle {
   border-left-color: rgba(37, 99, 235, 0.18);
+}
+
+.line-card.active .line-drag-handle {
+  border-right-color: rgba(37, 99, 235, 0.14);
 }
 
 .line-adopt-toggle.is-undecided {

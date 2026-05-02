@@ -52,7 +52,8 @@ export function renderConsiderationsPanel(s) {
 function renderConsiderationRow(s, item, phaseName, selectedId) {
   const meta = considerationMeta(s, item, phaseName);
   return `
-    <li class="${item.id === selectedId ? "selected" : ""}">
+    <li class="${item.id === selectedId ? "selected" : ""}" data-drop-kind="consideration" data-id="${esc(item.id)}">
+      <button type="button" class="drag-handle consideration-drag-handle" draggable="true" data-drag-kind="consideration" data-id="${esc(item.id)}" title="드래그해서 순서 변경" aria-label="${esc(item.label)} 순서 변경">⋮⋮</button>
       <input type="checkbox" data-action="ws-toggle-consideration" data-id="${esc(item.id)}" ${item.checked ? "checked" : ""} aria-label="${esc(item.label)}" />
       <button class="consideration-row" data-action="ws-select-consideration" data-id="${esc(item.id)}">
         <span class="consideration-text">

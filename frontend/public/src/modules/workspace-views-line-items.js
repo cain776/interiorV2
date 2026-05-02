@@ -86,7 +86,8 @@ function renderLineCard(s, item) {
     ? "이 견적을 채택"
     : "여러 견적 중 하나를 견적 패널에서 선택해 주세요.";
   return `
-    <div class="line-card ${item.id === s.selectedLineItemId ? "active" : ""}">
+    <div class="line-card ${item.id === s.selectedLineItemId ? "active" : ""}" data-drop-kind="line-item" data-id="${esc(item.id)}">
+      <button type="button" class="drag-handle line-drag-handle" draggable="true" data-drag-kind="line-item" data-id="${esc(item.id)}" title="드래그해서 순서 변경" aria-label="${esc(item.label)} 순서 변경">⋮⋮</button>
       <button class="line-card-main" data-action="ws-select-li" data-id="${esc(item.id)}" title="${esc([skuTitle, item.memo].filter(Boolean).join(" · "))}">
         <span class="line-label">${esc(item.label)}</span>
         <span class="line-sku">

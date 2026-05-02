@@ -34,9 +34,9 @@ import {
   openPhotoModal,
   openPhotoEditModal,
   movePhoto,
-  swapPhotos,
   deletePhoto,
 } from "./workspace-modals.js";
+import { bindWorkspaceDrag, shouldSuppressWorkspaceDragClick } from "./workspace-drag.js";
 import { openModal } from "./modal.js";
 
 /** @typedef {import("../api.js").WorkspaceBundle} WorkspaceBundle */
@@ -97,7 +97,7 @@ export async function renderWorkspacePage(root, projectId, options = {}) {
     customConsiderationsByContext: {},
   };
   normalizeSelection(state);
-  bindPhotoDragSwap(root, state, render);
+  bindWorkspaceDrag(root, state, render);
 
   async function reloadBundle() {
     const next = await api.projects.workspace(projectId);
@@ -115,7 +115,7 @@ export async function renderWorkspacePage(root, projectId, options = {}) {
   }
 
   root.onclick = async (event) => {
-    if (shouldSuppressClickAfterPhotoDrag(event)) return;
+    if (shouldSuppressWorkspaceDragClick(event)) return;
     const target = event.target;
     if (!(target instanceof Element)) return;
     const trigger = target.closest("[data-action]");
@@ -124,106 +124,6 @@ export async function renderWorkspacePage(root, projectId, options = {}) {
   };
 
   render();
-}
-
-/**
- * @param {HTMLElement} root
- * @param {WorkspaceState} state
- * @param {() => void} render
- */
-function bindPhotoDragSwap(root, state, render) {
-  /** @type {string|null} */
-  let draggedPhotoId = null;
-  /** @type {HTMLElement|null} */
-  let dropTarget = null;
-
-  /** @param {HTMLElement|null} card */
-  const setDropTarget = (card) => {
-    if (dropTarget === card) return;
-    dropTarget?.classList.remove("is-drop-target");
-    dropTarget = card;
-    dropTarget?.classList.add("is-drop-target");
-  };
-
-  const clearDragState = () => {
-    root.querySelectorAll(".photo-card.is-dragging, .photo-card.is-drop-target").forEach((card) => {
-      card.classList.remove("is-dragging", "is-drop-target");
-    });
-    draggedPhotoId = null;
-    dropTarget = null;
-  };
-
-  root.addEventListener("dragstart", (event) => {
-    const card = photoCardFromEvent(root, event.target);
-    const photoId = card?.dataset.photoId;
-    if (!card || !photoId || !event.dataTransfer) return;
-    draggedPhotoId = photoId;
-    state.selectedPhotoId = photoId;
-    card.classList.add("is-dragging");
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", photoId);
-  });
-
-  root.addEventListener("dragover", (event) => {
-    const card = photoCardFromEvent(root, event.target);
-    const targetId = card?.dataset.photoId;
-    if (!draggedPhotoId || !card || !targetId || targetId === draggedPhotoId) return;
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-    setDropTarget(card);
-  });
-
-  root.addEventListener("dragleave", (event) => {
-    if (!dropTarget || event.relatedTarget instanceof Node && dropTarget.contains(event.relatedTarget)) return;
-    const card = photoCardFromEvent(root, event.target);
-    if (card === dropTarget) setDropTarget(null);
-  });
-
-  root.addEventListener("drop", async (event) => {
-    const card = photoCardFromEvent(root, event.target);
-    const targetId = card?.dataset.photoId;
-    const sourceId = draggedPhotoId ?? event.dataTransfer?.getData("text/plain") ?? null;
-    if (!sourceId || !targetId || sourceId === targetId) {
-      clearDragState();
-      return;
-    }
-    event.preventDefault();
-    suppressPhotoDragClick();
-    clearDragState();
-    await swapPhotos(state, sourceId, targetId, render);
-  });
-
-  root.addEventListener("dragend", () => {
-    suppressPhotoDragClick();
-    clearDragState();
-  });
-}
-
-/**
- * @param {HTMLElement} root
- * @param {EventTarget|null} target
- * @returns {HTMLElement|null}
- */
-function photoCardFromEvent(root, target) {
-  if (!(target instanceof Element)) return null;
-  const card = target.closest(".photo-card[data-photo-id]");
-  return card instanceof HTMLElement && root.contains(card) ? card : null;
-}
-
-let suppressPhotoClickUntil = 0;
-
-function suppressPhotoDragClick() {
-  suppressPhotoClickUntil = Date.now() + 250;
-}
-
-/** @param {MouseEvent} event */
-function shouldSuppressClickAfterPhotoDrag(event) {
-  if (Date.now() > suppressPhotoClickUntil) return false;
-  const target = event.target;
-  if (!(target instanceof Element) || !target.closest(".photo-card[data-photo-id]")) return false;
-  event.preventDefault();
-  event.stopPropagation();
-  return true;
 }
 
 /**

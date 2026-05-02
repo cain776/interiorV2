@@ -8,12 +8,18 @@
 }
 
 .consideration-list li {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border-radius: 6px;
-  padding: 4px 4px 4px 8px;
+  padding: 4px 4px 4px 3px;
   border: 1px solid transparent;
+}
+
+.consideration-drag-handle {
+  height: auto;
+  align-self: stretch;
 }
 
 .consideration-list li:hover {
