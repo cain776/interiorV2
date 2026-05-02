@@ -71,8 +71,10 @@ function bindReorderDragHandles(root, state, render) {
     const kind = dragKind(handle?.dataset.dragKind);
     const id = handle?.dataset.id ?? null;
     if (!handle || !kind || !id || !event.dataTransfer) return;
+    const item = dragItemFromHandle(root, handle);
     dragged = { kind, id };
-    dragItemFromHandle(root, handle)?.classList.add("is-dragging");
+    if (item) setReorderDragImage(event, item);
+    item?.classList.add("is-dragging");
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("application/x-interior-drag-kind", kind);
     event.dataTransfer.setData("text/plain", id);
@@ -166,6 +168,20 @@ function dropItemById(root, kind, id) {
 function dropPositionFromEvent(event, item) {
   const rect = item.getBoundingClientRect();
   return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+}
+
+/** @param {DragEvent} event @param {HTMLElement} item */
+function setReorderDragImage(event, item) {
+  if (!event.dataTransfer) return;
+  const rect = item.getBoundingClientRect();
+  const offsetX = clamp(event.clientX - rect.left, 0, rect.width);
+  const offsetY = clamp(event.clientY - rect.top, 0, rect.height);
+  event.dataTransfer.setDragImage(item, offsetX, offsetY);
+}
+
+/** @param {number} value @param {number} min @param {number} max */
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 /**
