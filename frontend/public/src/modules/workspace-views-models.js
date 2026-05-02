@@ -4,6 +4,7 @@ import { esc } from "../dom.js";
 import {
   iBox, iCamera, iCheck, iClipboardList, iImage, iLayoutGrid, iUpload,
 } from "./icons.js";
+import { buildModelPayload } from "./workspace-model-export.js";
 import { formatArea, sqmToPyeong } from "./workspace-format.js";
 import {
   currentSpace,
@@ -118,15 +119,15 @@ function renderToggle(action, key, value, label, active) {
  * @param {Space|null} selectedRoom
  */
 function renderModelPreview(s, rooms, selectedRoom) {
-  const visibleRooms = selectedRoom ? [selectedRoom] : rooms;
+  const visibleRooms = rooms;
   if (visibleRooms.length === 0) return `<div class="empty-dashed grow">공간 데이터가 없습니다.</div>`;
   const sceneClass = `model-scene camera-${s.modelCamera} detail-${s.modelDetail}`;
   return `
     <div class="${sceneClass}" aria-label="3D 공간 미리보기">
       <div class="model-floor">
-        ${visibleRooms.map((room, index) => renderRoomBlock(room, index, selectedRoom !== null)).join("")}
+        ${visibleRooms.map((room, index) => renderRoomBlock(room, index, room.id === selectedRoom?.id)).join("")}
       </div>
-      ${s.modelShowReferences ? renderReferencePins(visibleRooms) : ""}
+      ${s.modelShowReferences ? renderReferencePins(selectedRoom ? [selectedRoom] : visibleRooms) : ""}
     </div>
   `;
 }
@@ -138,15 +139,15 @@ function renderModelPreview(s, rooms, selectedRoom) {
  */
 function renderRoomBlock(room, index, focused) {
   const area = safeArea(room);
-  const width = focused ? 208 : Math.max(98, Math.min(196, 72 + area * 2.3));
-  const depth = focused ? 146 : Math.max(72, Math.min(142, 54 + area * 1.6));
-  const height = focused ? 66 : Math.max(30, Math.min(64, 24 + area * 0.5));
+  const width = Math.max(98, Math.min(196, 72 + area * 2.3));
+  const depth = Math.max(72, Math.min(142, 54 + area * 1.6));
+  const height = focused ? 72 : Math.max(30, Math.min(64, 24 + area * 0.5));
   const col = index % 3;
   const row = Math.floor(index / 3);
   const x = 38 + col * 166 + (row % 2) * 42;
   const y = 44 + row * 116;
   return `
-    <button class="model-room-block" style="--x:${x}px; --y:${y}px; --w:${width}px; --d:${depth}px; --h:${height}px" data-action="ws-select-space" data-id="${esc(room.id)}" title="${esc(room.name)}">
+    <button class="model-room-block ${focused ? "active" : ""}" style="--x:${x}px; --y:${y}px; --w:${width}px; --d:${depth}px; --h:${height}px" data-action="ws-select-space" data-id="${esc(room.id)}" title="${esc(room.name)}">
       <span>${esc(room.name)}</span>
       <small>${area ? `${formatArea(area)}㎡` : "미입력"}</small>
       <i class="wall north"></i><i class="wall east"></i><i class="wall south"></i><i class="wall west"></i>
@@ -199,6 +200,7 @@ function renderInspector(s, selected, rooms, summary, floorplans, photos) {
       <div class="model-inspector-body">
         ${renderStatGrid(summary)}
         ${renderGenerationPanel(summary)}
+        ${renderFloorplanMapping(s, selected, floorplans)}
         ${renderPipeline()}
         ${renderSurfaceSummary(s, rooms)}
         ${renderReferencePanel(floorplans, photos)}
@@ -227,6 +229,72 @@ function renderGenerationPanel(summary) {
         ${iUpload({ size: 12 })}<span>SketchUp으로 보내기</span>
       </button>
     </section>
+  `;
+}
+
+/**
+ * @param {WorkspaceState} s
+ * @param {Space|null} selected
+ * @param {Attachment[]} floorplans
+ */
+function renderFloorplanMapping(s, selected, floorplans) {
+  const drawing = floorplans[0] ?? null;
+  if (!drawing) {
+    return `
+      <section class="model-subpanel model-map-panel">
+        <h3>도면 매핑</h3>
+        <div class="model-map-empty">대표 도면이 필요합니다.</div>
+      </section>
+    `;
+  }
+  const payload = buildModelPayload(s);
+  const zones = mappingZones(payload.rooms, selected);
+  return `
+    <section class="model-subpanel model-map-panel">
+      <h3>도면 매핑</h3>
+      <div class="model-map-canvas">
+        <img src="${esc(drawing.blobUrl)}" alt="${esc(drawing.caption ?? drawing.filename)}" />
+        ${zones.map(renderMappingZone).join("")}
+      </div>
+    </section>
+  `;
+}
+
+/**
+ * @param {ReturnType<typeof buildModelPayload>["rooms"]} rooms
+ * @param {Space|null} selected
+ */
+function mappingZones(rooms, selected) {
+  if (rooms.length === 0) return [];
+  const maxX = Math.max(...rooms.map((room) => room.geometry.xM + room.geometry.widthM));
+  const maxY = Math.max(...rooms.map((room) => room.geometry.yM + room.geometry.depthM));
+  const minX = Math.min(...rooms.map((room) => room.geometry.xM));
+  const minY = Math.min(...rooms.map((room) => room.geometry.yM));
+  const width = Math.max(1, maxX - minX);
+  const height = Math.max(1, maxY - minY);
+  const selectedId = selected && !isWholeHomeSpaceId(selected.id) ? selected.id : null;
+  return rooms.map((room) => ({
+    id: room.id,
+    name: room.name,
+    areaSqm: room.areaSqm,
+    active: selectedId === room.id,
+    left: 7 + ((room.geometry.xM - minX) / width) * 82,
+    top: 8 + ((room.geometry.yM - minY) / height) * 78,
+    width: Math.max(10, (room.geometry.widthM / width) * 82),
+    height: Math.max(10, (room.geometry.depthM / height) * 78),
+  }));
+}
+
+/**
+ * @param {{ id: string, name: string, areaSqm: number|null, active: boolean, left: number, top: number, width: number, height: number }} zone
+ */
+function renderMappingZone(zone) {
+  const style = `left:${zone.left.toFixed(2)}%;top:${zone.top.toFixed(2)}%;width:${zone.width.toFixed(2)}%;height:${zone.height.toFixed(2)}%`;
+  return `
+    <button class="model-map-zone ${zone.active ? "active" : ""}" style="${style}" data-action="ws-select-space" data-id="${esc(zone.id)}" title="${esc(zone.name)}">
+      <span>${esc(zone.name)}</span>
+      <small>${zone.areaSqm ? `${formatArea(zone.areaSqm)}㎡` : "면적 미입력"}</small>
+    </button>
   `;
 }
 

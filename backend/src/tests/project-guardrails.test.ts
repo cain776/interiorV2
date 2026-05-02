@@ -249,6 +249,23 @@ test("[meta] 모든 라우트 파일이 ROUTE_AUTH_POLICY 에 등록되어 있�
   }
 });
 
+test("[meta] docs/permissions.md 가 ROUTE_AUTH_POLICY 와 일치한다", async () => {
+  // 사람이 읽는 권한 매트릭스(docs/permissions.md) 와 코드의 ROUTE_AUTH_POLICY 가 어긋나면 가드레일 실패.
+  // 신규 라우트 추가 시 코드 + 문서 둘 다 갱신해야 통과.
+  const doc = await readProjectFile("docs/permissions.md");
+  for (const [file, policy] of Object.entries(ROUTE_AUTH_POLICY)) {
+    // 매트릭스 표 row 에 "라우트 파일명" 과 정책 키워드(public/admin/auth) 가 동시에 나타나야 한다.
+    const escapedFile = file.replace(/[.\\]/g, "\\$&");
+    const rowPattern = new RegExp(`\`${escapedFile}\`[^\\n]*\\*\\*${policy}\\*\\*`, "i");
+    assert.match(
+      doc,
+      rowPattern,
+      `docs/permissions.md 에 ${file} 의 정책(${policy}) 표기가 누락되었거나 불일치. `
+        + `"\`${file}\` ... **${policy}**" 형태의 표 row 가 필요.`,
+    );
+  }
+});
+
 test("[meta] 라우트 파일이 인증 정책에 맞는 가드를 등록한다", async () => {
   const routeDir = join(projectRoot, "backend/src/routes");
   for (const [file, policy] of Object.entries(ROUTE_AUTH_POLICY)) {

@@ -201,6 +201,16 @@
   background: linear-gradient(135deg, #fef3c7, #fff7ed);
 }
 
+.model-room-block.active {
+  z-index: 3;
+  border-color: var(--warning);
+  background: linear-gradient(135deg, #fef3c7, #fff7ed);
+  box-shadow:
+    0 0 0 3px rgba(255, 251, 235, 0.9) inset,
+    0 20px 0 rgba(245, 158, 11, 0.20),
+    14px 30px 38px rgba(146, 64, 14, 0.20);
+}
+
 .model-scene.detail-mass .wall {
   display: none;
 }

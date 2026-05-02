@@ -5,6 +5,7 @@ tmp/
 .env
 .env.local
 .env.*.local
+.env.test
 uploads/*
 !uploads/.gitkeep
 backups/*
@@ -13,3 +14,11 @@ naver_blog_images/
 test2.png
 .DS_Store
 *.log
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
+e2e/playwright/.cache/
+
+# IDE / Claude Code 개인 설정
+.claude/
