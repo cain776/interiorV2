@@ -39,3 +39,7 @@ export {
   swapPhotos,
   deletePhoto,
 } from "./workspace-modals-photo.js";
+
+export {
+  openReviewMaterialsModal,
+} from "./workspace-modals-review-materials.js";

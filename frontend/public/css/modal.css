@@ -39,6 +39,222 @@
   width: 403px;
 }
 
+.modal-card:has(.review-materials-dialog) {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.review-materials-dialog {
+  display: flex;
+  min-height: 0;
+  max-height: calc(100vh - 114px);
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  padding: 14px;
+}
+
+.review-materials-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 7px;
+  background: var(--brand-soft);
+  padding: 9px 11px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.review-materials-summary strong {
+  color: var(--fg);
+  font-weight: 800;
+}
+
+.review-materials-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.review-material-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  padding: 10px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.review-material-item:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.review-material-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.review-material-main:hover {
+  background: transparent;
+}
+
+.review-material-drag {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  cursor: grab;
+  padding: 0;
+}
+
+.review-material-drag:hover:not(:disabled),
+.review-material-drag:focus-visible {
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--brand);
+}
+
+.review-material-drag:active {
+  cursor: grabbing;
+}
+
+.review-material-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.review-material-copy strong,
+.review-material-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-material-copy strong {
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.review-material-url {
+  color: var(--brand);
+  font-size: 11px;
+}
+
+.review-material-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.review-material-editor {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 12px;
+}
+
+.review-material-editor-title,
+.review-material-editor-actions,
+.review-materials-footer {
+  display: flex;
+  align-items: center;
+}
+
+.review-material-editor-title {
+  gap: 7px;
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.review-material-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.review-material-editor .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.review-material-editor-actions,
+.review-materials-footer {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.review-material-editor-actions button,
+.review-materials-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.review-materials-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  margin: 0 -14px -14px;
+  padding: 12px 14px;
+  background: var(--bg-elev);
+}
+
+.review-materials-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .review-material-item {
+    flex-direction: column;
+  }
+
+  .review-material-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .review-material-editor .row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 이미지 확대 모달 — 사진/평면도 클릭 시 띄움. 카드 자체를 화면 거의 가득 늘림. */
 .modal-card:has(.image-zoom-body) {
   width: min(1100px, calc(100vw - 48px));

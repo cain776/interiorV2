@@ -110,6 +110,13 @@ erDiagram
         text status
         bigint total_budget
     }
+    vendors {
+        text id PK
+        text owner_id FK
+        int sort_order
+        boolean is_active
+        int rating "나의 선호도 0..5"
+    }
     quotes {
         text id PK
         text line_item_id FK
@@ -180,6 +187,8 @@ docs/      →  (참조만, 실행 안 됨)
 - 실제 파일은 base64 오버헤드 33% 감안해 ~3.7MB
 - 추후 디스크 / S3 로 옮기게 되면 `@fastify/multipart` + 별도 업로드 라우트로 전환
 
+업체 프로필 사진은 별도 정책을 쓴다. 프론트가 `photoDataUrl` 로 전송하면 서버가 `uploads/vendor-profiles/` 에 파일로 저장하고, `vendors.photo_url` 에는 `/uploads/vendor-profiles/{vendorId}.{ext}` 공개 URL 만 남긴다. 업체 목록 API 가 base64 payload 를 반복 전송하지 않도록 하기 위한 분리다.
+
 ### 정렬 (`sort_order`)
 
 `phases`, `spaces`, `line_items`, `review_materials` 는 프로젝트 / 공정 단위 `UNIQUE (parent_id, sort_order)` 제약. 재정렬은 두 단계 UPDATE:
@@ -190,6 +199,8 @@ docs/      →  (참조만, 실행 안 됨)
 트랜잭션 내에서 처리.
 
 `attachments` 는 다른 패턴: 단일 UPDATE + `unnest(orderedIds) WITH ORDINALITY` 로 한 번에 갱신. UNIQUE 는 `(owner_type, owner_id, kind, sort_order)` 단위이고 `DEFERRABLE INITIALLY DEFERRED` 라 statement 끝(commit 시점) 검사 → 단일 statement 내 swap 도 안전.
+
+`vendors` 는 사용자(owner) 단위 `sort_order` 를 가진다. 아직 가족/소규모 단계라 UNIQUE 제약은 두지 않고, `ORDER BY sort_order, name` 으로 표시 순서를 고정한다. `is_active=false` 업체는 기존 견적/계약 참조 보존을 위해 삭제하지 않고, 새 비교 업체 선택 목록에서 제외한다.
 
 ### 마이그레이션 정책
 
@@ -206,6 +217,7 @@ docs/      →  (참조만, 실행 안 됨)
 - `quotes_one_contracted_per_line` 부분 UNIQUE: 같은 `line_item_id` 에 `status='contracted'` 인 견적은 최대 1건.
 - `attachments_owner_sort_unique` UNIQUE (DEFERRABLE): owner 단위 정렬 충돌 방지.
 - `vendors_owner_name_unique`: 한 사용자가 같은 이름 업체 중복 생성 차단.
+- `vendors_owner_sort_idx`: 업체관리 표시 순서 조회 최적화.
 - `users_email_lower_idx` UNIQUE: 케이스 무관 이메일 중복 차단 (`Foo@x.com` ↔ `foo@x.com`).
 
 ## 보안 / 인증

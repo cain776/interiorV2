@@ -13,6 +13,7 @@ import { pool, shutdownDb } from "./lib/db.js";
 import { schemaToFieldErrors } from "./lib/schema.js";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import usersRoutes from "./routes/users.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import vendorsRoutes from "./routes/vendors.routes.js";
 import phasesRoutes from "./routes/phases.routes.js";
@@ -109,9 +110,10 @@ async function build() {
     },
   });
 
-  // 사진/첨부 업로드 정책: 현재는 프론트가 base64 data URL 로 직렬화해 JSON 으로 전송 →
-  // attachments.blob_url 컬럼에 그대로 저장. 5MB 제한 (attachments.routes.ts).
-  // 추후 디스크/S3 로 옮기면 @fastify/multipart 등록 + 별도 업로드 라우트로 전환.
+  // 사진/첨부 업로드 정책:
+  // - 프로젝트 attachments 는 아직 base64 data URL 을 JSON 으로 받아 blob_url 에 저장 (5MB 제한).
+  // - 업체 프로필 사진은 data URL 을 받아 uploads/vendor-profiles 파일로 저장하고 DB 에는 공개 URL 만 저장.
+  // 추후 공통 파일 저장소/S3 로 옮기면 @fastify/multipart 등록 + 별도 업로드 라우트로 전환.
 
   // schema 검증 실패 → ApiError 형식 통일. 기본은 400 으로 떨어진다.
   app.setErrorHandler((err: unknown, req, reply) => {
@@ -149,6 +151,7 @@ async function build() {
 
   await app.register(healthRoutes);
   await app.register(authRoutes);
+  await app.register(usersRoutes);
   await app.register(projectsRoutes);
   await app.register(vendorsRoutes);
   await app.register(phasesRoutes);

@@ -1,11 +1,19 @@
 import type { FastifyInstance } from "fastify";
 import { hashPassword, verifyPassword } from "../lib/auth.js";
 import { audit } from "../lib/audit.js";
-import { createUser, findUserByEmail, findUserById } from "../repos/users.repo.js";
-import type { PublicUser } from "../types/domain.js";
+import { countUsers, createUser, findUserByEmail, findUserById } from "../repos/users.repo.js";
+import type { PublicUser, User } from "../types/domain.js";
 
-function publicUser(u: { id: string; email: string; name: string }): PublicUser {
-  return { id: u.id, email: u.email, name: u.name };
+function publicUser(u: User): PublicUser {
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    role: u.role,
+    canLogin: u.canLogin,
+    createdAt: u.createdAt,
+    updatedAt: u.updatedAt,
+  };
 }
 
 // brute-force 보호. signup/login 에만 적용 (다른 라우트는 글로벌 OFF).
@@ -68,7 +76,14 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const passwordHash = await hashPassword(password);
-      const user = await createUser({ email, name, passwordHash });
+      const userCount = await countUsers();
+      const user = await createUser({
+        email,
+        name,
+        passwordHash,
+        role: userCount === 0 ? "admin" : "customer",
+        canLogin: true,
+      });
       // Session fixation 방지 — 익명 세션 ID 를 폐기하고 새 ID 발급 후 인증 정보 부착.
       // 공격자가 미리 심어둔 session id 가 인증된 상태로 승격되는 경로를 차단.
       await req.session.regenerate();
@@ -90,6 +105,10 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
         // credential stuffing 탐지용 — 존재하지 않는 이메일도 기록 (응답 메시지는 동일하게 유지).
         await audit(req, "login.fail", "user", null, { email, reason: "no_user" });
         return reply.code(400).send({ ok: false, error: "이메일 또는 비밀번호가 올바르지 않습니다." });
+      }
+      if (!user.canLogin) {
+        await audit(req, "login.fail", "user", user.id, { email, reason: "login_disabled" });
+        return reply.code(403).send({ ok: false, error: "로그인 권한이 비활성화되었습니다." });
       }
       const valid = await verifyPassword(password, user.passwordHash);
       if (!valid) {
@@ -125,7 +144,7 @@ export default async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
     }
     const user = await findUserById(id);
-    if (!user) {
+    if (!user || !user.canLogin) {
       await req.session.destroy();
       return reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
     }

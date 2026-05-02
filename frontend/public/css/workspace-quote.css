@@ -48,6 +48,44 @@
   opacity: 0.70;
 }
 
+.vendor-chip {
+  overflow: hidden;
+  padding: 0;
+}
+
+.vendor-chip .chip-main,
+.vendor-chip .chip-remove {
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+}
+
+.vendor-chip .chip-main {
+  gap: 4px;
+  min-width: 0;
+  padding-left: 9px;
+}
+
+.vendor-chip .chip-remove {
+  justify-content: center;
+  width: 20px;
+  margin-left: 2px;
+  border-left: 1px solid rgba(37, 99, 235, 0.18);
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.72;
+}
+
+.vendor-chip .chip-remove:hover {
+  background: rgba(37, 99, 235, 0.12);
+  opacity: 1;
+}
+
 .chip.active {
   border-color: var(--brand);
   background: var(--brand);

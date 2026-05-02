@@ -14,8 +14,16 @@ const STATUS_LABEL = {
  * @param {HTMLElement} root
  * @param {(projectId: string) => void} onOpen
  * @param {(projectId: string) => void} [onOpenSpaces]
+ * @param {(projectId: string) => void} [onOpenModels]
+ * @param {(projectId: string) => void} [onOpenReviewMaterials]
  */
-export async function renderProjectsPage(root, onOpen, onOpenSpaces) {
+export async function renderProjectsPage(
+  root,
+  onOpen,
+  onOpenSpaces,
+  onOpenModels,
+  onOpenReviewMaterials,
+) {
   root.innerHTML = html`
     <section class="page projects-page">
       <header class="page-header">
@@ -30,7 +38,7 @@ export async function renderProjectsPage(root, onOpen, onOpenSpaces) {
 
   const listRoot = $("#projects-list", root);
   const refresh = () => refreshProjectsList(listRoot);
-  bindProjectsPageActions(root, refresh, onOpen, onOpenSpaces);
+  bindProjectsPageActions(root, refresh, onOpen, onOpenSpaces, onOpenModels, onOpenReviewMaterials);
   await refresh();
 }
 
@@ -71,6 +79,8 @@ function renderProjectCard(p) {
       <div class="project-card-actions">
         <button type="button" class="compact-btn" data-action="project-open" data-id="${esc(p.id)}">견적 관리</button>
         <button type="button" class="compact-btn" data-action="project-open-spaces" data-id="${esc(p.id)}">공간 관리</button>
+        <button type="button" class="compact-btn" data-action="project-open-models" data-id="${esc(p.id)}">3D 모델</button>
+        <button type="button" class="compact-btn" data-action="project-open-review" data-id="${esc(p.id)}">참고자료</button>
       </div>
     </article>
   `;
@@ -81,8 +91,17 @@ function renderProjectCard(p) {
  * @param {HTMLElement} root @param {() => Promise<void>} refresh
  * @param {(projectId: string) => void} onOpen
  * @param {((projectId: string) => void) | undefined} onOpenSpaces
+ * @param {((projectId: string) => void) | undefined} onOpenModels
+ * @param {((projectId: string) => void) | undefined} onOpenReviewMaterials
  */
-function bindProjectsPageActions(root, refresh, onOpen, onOpenSpaces) {
+function bindProjectsPageActions(
+  root,
+  refresh,
+  onOpen,
+  onOpenSpaces,
+  onOpenModels,
+  onOpenReviewMaterials,
+) {
   root.onclick = (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -98,6 +117,12 @@ function bindProjectsPageActions(root, refresh, onOpen, onOpenSpaces) {
     } else if (action === "project-open-spaces") {
       const id = trigger.dataset.id;
       if (id) (onOpenSpaces ?? onOpen)(id);
+    } else if (action === "project-open-models") {
+      const id = trigger.dataset.id;
+      if (id) (onOpenModels ?? onOpenSpaces ?? onOpen)(id);
+    } else if (action === "project-open-review") {
+      const id = trigger.dataset.id;
+      if (id) (onOpenReviewMaterials ?? onOpen)(id);
     }
   };
 }

@@ -4,7 +4,7 @@
 /**
  * @typedef {Object} AppState
  * @property {string} route
- * @property {{ id: string, email: string, name: string } | null} currentUser
+ * @property {import("./api.js").User | null} currentUser
  * @property {{ id: string, name: string } | null} currentProject
  */
 

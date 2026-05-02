@@ -157,6 +157,7 @@
 
 .mode-tabs button.active.brand { background: var(--brand); }
 .mode-tabs button.active.success { background: var(--success); }
+.mode-tabs button.active.warning { background: var(--warning); }
 
 .workspace-lnb {
   position: fixed;

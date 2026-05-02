@@ -27,7 +27,10 @@ export function openQuoteModal(s, isEdit, reload) {
   const quote = isEdit && s.selectedQuoteId ? s.bundle.quotes.find((q) => q.id === s.selectedQuoteId) ?? null : null;
   if (isEdit && !quote) return;
   const defaultLineItemId = quote?.lineItemId ?? s.selectedLineItemId ?? currentLineItems(s)[0]?.id ?? "";
-  const defaultVendorId = quote?.vendorId ?? s.bundle.vendors[0]?.id ?? "";
+  const selectableVendors = quote
+    ? s.bundle.vendors.filter((vendor) => vendor.isActive || vendor.id === quote.vendorId)
+    : s.bundle.vendors.filter((vendor) => vendor.isActive);
+  const defaultVendorId = quote?.vendorId ?? selectableVendors[0]?.id ?? "";
   const meta = quote?.meta ?? {};
   openEntityModal({
     title: isEdit ? "견적 수정" : "견적 추가",
@@ -35,7 +38,7 @@ export function openQuoteModal(s, isEdit, reload) {
     fields: `
       <div class="row">
         <label><span>위치/항목 *</span><select name="lineItemId" ${isEdit ? "disabled" : ""}>${currentLineItems(s).map((li) => `<option value="${esc(li.id)}" ${li.id === defaultLineItemId ? "selected" : ""}>${esc(li.label)}</option>`).join("")}</select></label>
-        <label><span>업체 *</span><select name="vendorId">${s.bundle.vendors.map((v) => `<option value="${esc(v.id)}" ${v.id === defaultVendorId ? "selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label>
+        <label><span>업체 *</span><select name="vendorId">${selectableVendors.map((v) => `<option value="${esc(v.id)}" ${v.id === defaultVendorId ? "selected" : ""}>${esc(v.name)}${v.isActive ? "" : " (사용안함)"}</option>`).join("")}</select></label>
       </div>
       <div class="row">
         <label><span>견적가 *</span><input name="price" type="number" min="0" step="1" required value="${esc(quote?.price ?? "")}" /></label>
@@ -111,7 +114,9 @@ export async function adoptSelectedQuote(s, reload) {
 export function openVendorModal(s, render, reload) {
   const onlineVendor = s.bundle.vendors.find((vendor) => vendor.name.trim() === "온라인") ?? null;
   const vendorOptions = [
-    ...s.bundle.vendors.map((vendor) => ({ vendor, syntheticOnline: false })),
+    ...s.bundle.vendors
+      .filter((vendor) => vendor.isActive)
+      .map((vendor) => ({ vendor, syntheticOnline: false })),
     ...(onlineVendor ? [] : [{ vendor: null, syntheticOnline: true }]),
   ];
   openEntityModal({
@@ -144,11 +149,13 @@ export function openVendorModal(s, render, reload) {
         });
         if (!result.ok) return result.error;
         s.comparisonVendorIds.add(result.data.id);
+        s.hiddenVendorIds.delete(result.data.id);
         if (s.vendorFilter.size > 0) s.vendorFilter.add(result.data.id);
         await reload();
         return undefined;
       }
       s.comparisonVendorIds.add(vendorId);
+      s.hiddenVendorIds.delete(vendorId);
       if (s.vendorFilter.size > 0) s.vendorFilter.add(vendorId);
       render();
       return undefined;

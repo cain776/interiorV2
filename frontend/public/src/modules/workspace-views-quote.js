@@ -7,7 +7,7 @@ import {
   visibleQuotes,
   selectedLineItem,
   currentContextLabel,
-  vendorsForQuotes,
+  comparisonVendors,
   vendorFilterIds,
   selectedItemForQuote,
 } from "./workspace-selectors.js";
@@ -26,12 +26,16 @@ const VENDOR_COL_WIDTH = "170px";
 export function renderQuotePane(s) {
   const lineItems = currentLineItems(s);
   const quotes = visibleQuotes(s);
-  const selectedQuote = s.selectedQuoteId ? quotes.find((q) => q.id === s.selectedQuoteId) ?? null : null;
-  const selectedItem = selectedLineItem(s);
-  const selectedQuoteIsAdopted = Boolean(selectedQuote && selectedItemForQuote(s, selectedQuote)?.selectedQuoteId === selectedQuote.id);
   const activeVendors = comparisonVendors(s, quotes);
   const visibleVendorIds = vendorFilterIds(s, activeVendors);
   const visibleVendors = visibleVendorIds ? activeVendors.filter((v) => visibleVendorIds.has(v.id)) : activeVendors;
+  const visibleVendorIdSet = new Set(visibleVendors.map((vendor) => vendor.id));
+  const displayedQuotes = quotes.filter((quote) => visibleVendorIdSet.has(quote.vendorId));
+  const selectedQuote = s.selectedQuoteId
+    ? displayedQuotes.find((q) => q.id === s.selectedQuoteId) ?? null
+    : null;
+  const selectedItem = selectedLineItem(s);
+  const selectedQuoteIsAdopted = Boolean(selectedQuote && selectedItemForQuote(s, selectedQuote)?.selectedQuoteId === selectedQuote.id);
   return `
     <aside class="quote-pane-v1">
       <section class="mini-panel quote-compare-panel">
@@ -40,7 +44,7 @@ export function renderQuotePane(s) {
           <h2>견적 비교</h2>
           <span class="quote-context">· ${esc(currentContextLabel(s))}</span>
           <span class="badge">${lineItems.length} 항목</span>
-          <span class="badge">${quotes.length} 견적</span>
+          <span class="badge">${displayedQuotes.length} 견적</span>
           <div class="quote-actions">
             <button class="icon-btn" data-action="ws-open-quote" data-mode="edit" ${selectedQuote || selectedItem ? "" : "disabled"} title="견적 수정">${iPencil({ size: 14 })}</button>
             <button class="icon-btn danger" data-action="ws-delete-quote" ${selectedQuote ? "" : "disabled"} title="견적 삭제">${iTrash({ size: 14 })}</button>
@@ -49,9 +53,9 @@ export function renderQuotePane(s) {
           <span class="soft-badge ${s.mode === "turnkey" ? "brand" : "success"}">${modeLabel(s.mode)}</span>
           <button class="compact-primary" data-action="ws-open-vendor">${iPlus({ size: 12 })}<span>업체 추가</span></button>
         </header>
-        ${renderVendorFilterBar(activeVendors, visibleVendorIds)}
+        ${renderVendorFilterBar(s, activeVendors, visibleVendorIds)}
         <div class="quote-compare-body">
-          ${renderQuoteMatrix(s, lineItems, quotes, visibleVendors)}
+          ${renderQuoteMatrix(s, lineItems, displayedQuotes, visibleVendors)}
         </div>
       </section>
       ${renderPhotosPanel(s)}
@@ -59,16 +63,25 @@ export function renderQuotePane(s) {
   `;
 }
 
-/** @param {Vendor[]} activeVendors @param {Set<string>|null} visibleVendorIds */
-function renderVendorFilterBar(activeVendors, visibleVendorIds) {
+/** @param {WorkspaceState} s @param {Vendor[]} activeVendors @param {Set<string>|null} visibleVendorIds */
+function renderVendorFilterBar(s, activeVendors, visibleVendorIds) {
+  const hasHidden = (s.hiddenVendorIds?.size ?? 0) > 0;
+  const showAll = !hasHidden && !visibleVendorIds;
   return `
     <div class="vendor-filter-bar">
       <span>업체</span>
-      <button class="chip ${!visibleVendorIds ? "active" : ""}" data-action="ws-clear-vendors">전체</button>
+      <button class="chip ${showAll ? "active" : ""}" data-action="ws-clear-vendors">전체</button>
       ${activeVendors
         .map((vendor) => {
           const active = !visibleVendorIds || visibleVendorIds.has(vendor.id);
-          return `<button class="chip ${active ? "active soft" : ""}" data-action="ws-toggle-vendor" data-id="${esc(vendor.id)}" title="${esc(vendorInfoTitle(vendor))}">${esc(vendor.name)} <small>${esc(vendor.specialty ?? "")}</small>${vendor.rating ? ` ★${vendor.rating}` : ""}</button>`;
+          return `
+            <span class="chip vendor-chip ${active ? "active soft" : ""}" title="${esc(vendorInfoTitle(vendor))}">
+              <button class="chip-main" data-action="ws-toggle-vendor" data-id="${esc(vendor.id)}">
+                ${esc(vendor.name)} <small>${esc(vendor.specialty ?? "")}</small>${vendor.rating ? ` ★${vendor.rating}` : ""}
+              </button>
+              ${active ? `<button class="chip-remove" data-action="ws-remove-vendor" data-id="${esc(vendor.id)}" title="업체 빼기" aria-label="${esc(vendor.name)} 업체 빼기">x</button>` : ""}
+            </span>
+          `;
         })
         .join("")}
     </div>
@@ -78,6 +91,9 @@ function renderVendorFilterBar(activeVendors, visibleVendorIds) {
 /** @param {WorkspaceState} s @param {LineItem[]} lineItems @param {Quote[]} quotes @param {Vendor[]} vendors */
 function renderQuoteMatrix(s, lineItems, quotes, vendors) {
   if (lineItems.length === 0) return `<div class="empty-dashed grow">비교할 항목이 없습니다.</div>`;
+  if (vendors.length === 0 && (s.hiddenVendorIds?.size ?? 0) > 0) {
+    return `<div class="empty-dashed grow">표시할 업체가 없습니다. 전체를 눌러 다시 표시하세요.</div>`;
+  }
   if (vendors.length === 0) return `<div class="empty-dashed grow">아직 받은 견적이 없습니다. 업체를 추가하고 견적을 입력하세요.</div>`;
 
   const grid = `${QUOTE_GRID_TEMPLATE} ${vendors.map(() => VENDOR_COL_WIDTH).join(" ")}`;
@@ -88,7 +104,7 @@ function renderQuoteMatrix(s, lineItems, quotes, vendors) {
     <div class="quote-matrix" style="--quote-grid:${esc(grid)}">
       <div class="quote-matrix-inner">
         ${renderMatrixHeader(vendors)}
-        ${lineItems.map((li) => renderMatrixRow(s, li, quotes, vendors, quoteMatrix)).join("")}
+        ${lineItems.map((li) => renderMatrixRow(s, li, vendors, quoteMatrix)).join("")}
         ${renderMatrixFooter(vendors, totals)}
       </div>
     </div>
@@ -122,11 +138,13 @@ function renderMatrixHeader(vendors) {
 }
 
 /**
- * @param {WorkspaceState} s @param {LineItem} li @param {Quote[]} quotes
+ * @param {WorkspaceState} s @param {LineItem} li
  * @param {Vendor[]} vendors @param {Map<string, Quote>} quoteMatrix
  */
-function renderMatrixRow(s, li, quotes, vendors, quoteMatrix) {
-  const itemQuotes = quotes.filter((q) => q.lineItemId === li.id);
+function renderMatrixRow(s, li, vendors, quoteMatrix) {
+  const itemQuotes = vendors
+    .map((vendor) => quoteMatrix.get(`${li.id}__${vendor.id}`))
+    .filter(isQuote);
   const canonical = itemQuotes.find((q) => q.id === li.selectedQuoteId) ?? itemQuotes[0];
   const adoptedMark = li.selectedQuoteId
     ? `<span class="adopted-marker" aria-label="채택됨">${iStar({ size: 11 })}</span>`
@@ -142,6 +160,11 @@ function renderMatrixRow(s, li, quotes, vendors, quoteMatrix) {
       ${vendors.map((vendor) => renderPriceCell(s, li, vendor, quoteMatrix)).join("")}
     </div>
   `;
+}
+
+/** @param {Quote|undefined} quote @returns {quote is Quote} */
+function isQuote(quote) {
+  return Boolean(quote);
 }
 
 /**
@@ -182,22 +205,17 @@ function renderVendorHeadCell(vendor) {
   `;
 }
 
-/** @param {WorkspaceState} s @param {Quote[]} quotes @returns {Vendor[]} */
-function comparisonVendors(s, quotes) {
-  const selectedIds = s.comparisonVendorIds ?? new Set();
-  const selected = s.bundle.vendors.filter((vendor) => selectedIds.has(vendor.id));
-  const byId = new Map([...vendorsForQuotes(s, quotes), ...selected].map((vendor) => [vendor.id, vendor]));
-  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "ko"));
-}
-
 /** @param {Vendor} vendor */
 function vendorInfoTitle(vendor) {
   return [
     `업체명: ${vendor.name}`,
     vendor.specialty ? `전문분야: ${vendor.specialty}` : null,
     vendor.ceo ? `대표: ${vendor.ceo}` : null,
-    vendor.phone ? `전화: ${vendor.phone}` : null,
+    vendor.companyPhone ? `회사 전화: ${vendor.companyPhone}` : null,
+    vendor.mobilePhone ? `모바일 전화: ${vendor.mobilePhone}` : null,
+    !vendor.companyPhone && !vendor.mobilePhone && vendor.phone ? `전화: ${vendor.phone}` : null,
     vendor.email ? `이메일: ${vendor.email}` : null,
-    vendor.rating != null ? `평점: ${"★".repeat(vendor.rating)}${"☆".repeat(5 - vendor.rating)}` : null,
+    vendor.rating != null ? `나의 선호도: ${"★".repeat(vendor.rating)}${"☆".repeat(5 - vendor.rating)}` : null,
+    vendor.isActive ? null : "사용안함",
   ].filter(Boolean).join(" / ");
 }

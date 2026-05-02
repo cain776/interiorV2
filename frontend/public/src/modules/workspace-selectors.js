@@ -194,11 +194,23 @@ export function vendorsForQuotes(s, quotes) {
   return result;
 }
 
+/** @param {WorkspaceState} s @param {Quote[]} quotes @returns {Vendor[]} */
+export function comparisonVendors(s, quotes) {
+  const selectedIds = s.comparisonVendorIds ?? new Set();
+  const hiddenIds = s.hiddenVendorIds ?? new Set();
+  const selected = s.bundle.vendors.filter((vendor) => selectedIds.has(vendor.id));
+  const byId = new Map([...vendorsForQuotes(s, quotes), ...selected].map((vendor) => [vendor.id, vendor]));
+  return [...byId.values()]
+    .filter((vendor) => !hiddenIds.has(vendor.id))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ko"));
+}
+
 /** @param {WorkspaceState} s @param {Vendor[]} vendors */
 export function vendorFilterIds(s, vendors) {
-  if (s.vendorFilter.size === 0 || s.vendorFilter.size === vendors.length) return null;
   const allowed = new Set(vendors.map((v) => v.id));
-  return new Set([...s.vendorFilter].filter((id) => allowed.has(id)));
+  const selected = [...s.vendorFilter].filter((id) => allowed.has(id));
+  if (selected.length === 0 || selected.length === allowed.size) return null;
+  return new Set(selected);
 }
 
 /** @param {WorkspaceState} s @param {Quote} quote */

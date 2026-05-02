@@ -3,7 +3,7 @@
 import { esc } from "../dom.js";
 import {
   iHammer, iMenu, iMapPin, iExternalLink, iLogOut,
-  iLayers, iLayoutGrid, iPlus, iClipboardList, iBuilding,
+  iLayers, iLayoutGrid, iBox, iPlus, iClipboardList, iBuilding,
 } from "./icons.js";
 import { formatKrw } from "./workspace-format.js";
 
@@ -37,6 +37,7 @@ export function renderProjectHeader(s, user) {
         <div class="mode-tabs view-tabs" role="tablist" aria-label="관리 화면">
           <button data-action="goto" data-route="/projects/${esc(projectPathId)}" class="${s.view === "quotes" ? "active brand" : ""}">견적 관리</button>
           <button data-action="goto" data-route="/projects/${esc(projectPathId)}/spaces" class="${s.view === "spaces" ? "active success" : ""}">공간 관리</button>
+          <button data-action="goto" data-route="/projects/${esc(projectPathId)}/models" class="${s.view === "models" ? "active warning" : ""}">3D 모델</button>
         </div>
         <div class="mode-tabs" role="tablist" aria-label="견적 방식">
           <button data-action="ws-mode" data-mode="turnkey" class="${s.mode === "turnkey" ? "active brand" : ""}">턴키</button>
@@ -58,6 +59,8 @@ function renderLnb(projectName, projectPathId, view, user) {
         <nav>
           <button data-action="goto" data-route="/projects/${esc(projectPathId)}" class="${view === "quotes" ? "active" : ""}">${iClipboardList({ size: 13 })}<span>견적 관리</span></button>
           <button data-action="goto" data-route="/projects/${esc(projectPathId)}/spaces" class="${view === "spaces" ? "active" : ""}">${iLayoutGrid({ size: 13 })}<span>공간 관리</span></button>
+          <button data-action="goto" data-route="/projects/${esc(projectPathId)}/models" class="${view === "models" ? "active" : ""}">${iBox({ size: 13 })}<span>3D 모델</span></button>
+          <button data-action="ws-open-review-materials">${iClipboardList({ size: 13 })}<span>참고자료</span></button>
         </nav>
       </div>
       <div class="workspace-lnb-section">

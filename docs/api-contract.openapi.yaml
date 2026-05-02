@@ -24,7 +24,7 @@ info:
       `POST /api/quotes/{id}/select` 는 line_items.selected_quote_id 만 갱신, status 는 사용자가 수동 관리.
     - **첨부**: 현재 base64 data URL 로 직렬화해 JSON 으로 전송, 5MB 제한.
       추후 `@fastify/multipart` + S3 로 이전 시 별도 라우트 분리.
-    - **순서 변경**: phases / spaces / line-items / review-materials 는 별도 reorder 엔드포인트.
+    - **순서 변경**: vendors / phases / spaces / line-items / review-materials 는 별도 reorder 엔드포인트.
       attachments 도 동일.
   contact:
     name: Project repository
@@ -49,6 +49,7 @@ security:
 tags:
   - { name: health, description: 서버 상태 }
   - { name: auth, description: 회원가입/로그인/세션 }
+  - { name: users, description: 사용자 관리 }
   - { name: projects, description: 프로젝트 }
   - { name: vendors, description: 업체 }
   - { name: phases, description: 공정 }
@@ -108,11 +109,15 @@ components:
 
     User:
       type: object
-      required: [id, email, name]
+      required: [id, email, name, role, canLogin, createdAt, updatedAt]
       properties:
         id: { type: string }
         email: { type: string, format: email }
         name: { type: string }
+        role: { type: string, enum: [admin, customer, vendor], description: "관리자 / 일반(고객) / 업체" }
+        canLogin: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
 
     Project:
       type: object
@@ -134,16 +139,25 @@ components:
 
     Vendor:
       type: object
-      required: [id, ownerId, name, createdAt, updatedAt]
+      required: [id, ownerId, name, sortOrder, isActive, createdAt, updatedAt]
       properties:
         id: { type: string }
         ownerId: { type: string }
         name: { type: string }
         ceo: { type: string, nullable: true }
         phone: { type: string, nullable: true }
+        officeAddress: { type: string, nullable: true }
+        companyPhone: { type: string, nullable: true }
+        mobilePhone: { type: string, nullable: true }
+        photoUrl:
+          type: string
+          nullable: true
+          description: "업체 프로필 사진 공개 URL. 서버가 /uploads/vendor-profiles/ 아래 파일로 저장한 경로."
         email: { type: string, nullable: true }
         specialty: { type: string, nullable: true }
-        rating: { type: integer, nullable: true, minimum: 0, maximum: 5 }
+        rating: { type: integer, nullable: true, minimum: 0, maximum: 5, description: "UI label: 나의 선호도" }
+        sortOrder: { type: integer }
+        isActive: { type: boolean }
         memo: { type: string, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -416,6 +430,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiError" }
+    Forbidden:
+      description: 권한 없음
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
     NotFound:
       description: 리소스 없음 또는 권한 없음
       content:
@@ -547,6 +566,112 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/User" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/users:
+    get:
+      tags: [users]
+      summary: 사용자 목록
+      description: 관리자 전용. 설정 페이지 사용자 관리에서 사용한다.
+      responses:
+        "200":
+          description: 사용자 목록
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [users]
+      summary: 사용자 생성
+      description: 관리자 전용. 비밀번호는 응답에 포함하지 않는다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, name, password]
+              additionalProperties: false
+              properties:
+                email: { type: string, format: email }
+                name: { type: string }
+                password: { type: string, minLength: 8 }
+                role: { type: string, enum: [admin, customer, vendor], default: customer }
+                canLogin: { type: boolean, default: true }
+      responses:
+        "200":
+          description: 생성된 사용자
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [users]
+      summary: 사용자 수정
+      description: 관리자 전용. role/canLogin 으로 로그인 권한을 관리한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                email: { type: string, format: email }
+                name: { type: string }
+                password: { type: string, minLength: 8 }
+                role: { type: string, enum: [admin, customer, vendor] }
+                canLogin: { type: boolean }
+      responses:
+        "200":
+          description: 수정된 사용자
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [users]
+      summary: 사용자 삭제
+      description: 관리자 전용. 현재 로그인 사용자와 마지막 로그인 가능 관리자는 삭제할 수 없다.
+      responses:
+        "200":
+          description: 삭제됨
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeleteSuccess" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /api/projects:
     get:
@@ -725,9 +850,17 @@ paths:
                 name: { type: string }
                 ceo: { type: string, nullable: true }
                 phone: { type: string, nullable: true }
+                officeAddress: { type: string, nullable: true }
+                companyPhone: { type: string, nullable: true }
+                mobilePhone: { type: string, nullable: true }
+                photoDataUrl:
+                  type: string
+                  nullable: true
+                  description: "업체 프로필 사진 업로드 입력. PNG/JPEG/WebP/GIF data URL, 2MB 이하. 서버는 파일로 저장하고 응답의 photoUrl에 공개 URL을 반환한다."
                 email: { type: string, nullable: true }
                 specialty: { type: string, nullable: true }
-                rating: { type: integer, nullable: true, minimum: 0, maximum: 5 }
+                rating: { type: integer, nullable: true, minimum: 0, maximum: 5, description: "UI label: 나의 선호도" }
+                isActive: { type: boolean }
                 memo: { type: string, nullable: true }
       responses:
         "200":
@@ -740,6 +873,38 @@ paths:
                   - type: object
                     properties:
                       data: { $ref: "#/components/schemas/Vendor" }
+
+  /api/vendors/reorder:
+    patch:
+      tags: [vendors]
+      summary: 업체 순서 변경
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderedIds]
+              additionalProperties: false
+              properties:
+                orderedIds:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: 재정렬된 업체 목록
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Vendor" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/vendors/{id}:
     parameters:
@@ -760,9 +925,17 @@ paths:
                 name: { type: string }
                 ceo: { type: string, nullable: true }
                 phone: { type: string, nullable: true }
+                officeAddress: { type: string, nullable: true }
+                companyPhone: { type: string, nullable: true }
+                mobilePhone: { type: string, nullable: true }
+                photoDataUrl:
+                  type: string
+                  nullable: true
+                  description: "업체 프로필 사진 업로드 입력. 문자열이면 교체, null이면 삭제. 서버는 파일로 저장하고 응답의 photoUrl에 공개 URL을 반환한다."
                 email: { type: string, nullable: true }
                 specialty: { type: string, nullable: true }
-                rating: { type: integer, nullable: true, minimum: 0, maximum: 5 }
+                rating: { type: integer, nullable: true, minimum: 0, maximum: 5, description: "UI label: 나의 선호도" }
+                isActive: { type: boolean }
                 memo: { type: string, nullable: true }
       responses:
         "200":

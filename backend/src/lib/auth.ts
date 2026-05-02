@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { findUserById } from "../repos/users.repo.js";
 
 declare module "fastify" {
   interface Session {
@@ -24,6 +25,12 @@ export async function requireAuth(
   reply: FastifyReply,
 ): Promise<FastifyReply | void> {
   if (!req.session.userId) {
+    reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
+    return reply;
+  }
+  const user = await findUserById(req.session.userId);
+  if (!user || !user.canLogin) {
+    await req.session.destroy();
     reply.code(401).send({ ok: false, error: "로그인이 필요합니다." });
     return reply;
   }

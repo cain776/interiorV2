@@ -15,7 +15,8 @@
  * @typedef {ApiSuccess<T> | ApiError} ApiResult
  */
 
-/** @typedef {{ id: string, email: string, name: string }} User */
+/** @typedef {"admin"|"customer"|"vendor"} UserRole */
+/** @typedef {{ id: string, email: string, name: string, role: UserRole, canLogin: boolean, createdAt: string, updatedAt: string }} User */
 /** @typedef {"planning"|"in_progress"|"done"|"archived"} ProjectStatus */
 /** @typedef {"planned"|"in_progress"|"done"|"as"} PhaseStatus */
 /** @typedef {"turnkey"|"self"} QuoteMode */
@@ -54,9 +55,15 @@
  * @property {string} name
  * @property {string|null} ceo
  * @property {string|null} phone
+ * @property {string|null} officeAddress
+ * @property {string|null} companyPhone
+ * @property {string|null} mobilePhone
+ * @property {string|null} photoUrl
  * @property {string|null} email
  * @property {string|null} specialty
  * @property {number|null} rating
+ * @property {number} sortOrder
+ * @property {boolean} isActive
  * @property {string|null} memo
  * @property {string} createdAt
  * @property {string} updatedAt
@@ -308,6 +315,20 @@ export const api = {
     me: () => /** @type {Promise<ApiResult<User>>} */ (request("/api/auth/me")),
   },
 
+  users: {
+    list: () => /** @type {Promise<ApiResult<User[]>>} */ (request("/api/users")),
+    /** @param {{ email: string, name: string, password: string, role?: UserRole, canLogin?: boolean }} input */
+    create: (input) => /** @type {Promise<ApiResult<User>>} */ (
+      send("/api/users", "POST", input)
+    ),
+    /** @param {string} id @param {{ email?: string, name?: string, password?: string, role?: UserRole, canLogin?: boolean }} patch */
+    update: (id, patch) => /** @type {Promise<ApiResult<User>>} */ (
+      send(`/api/users/${encodeURIComponent(id)}`, "PATCH", patch)
+    ),
+    /** @param {string} id */
+    remove: (id) => send(`/api/users/${encodeURIComponent(id)}`, "DELETE"),
+  },
+
   projects: {
     list: () => /** @type {Promise<ApiResult<Project[]>>} */ (request("/api/projects")),
     /** @param {string} id */
@@ -339,6 +360,10 @@ export const api = {
     /** @param {string} id @param {Partial<Vendor>} patch */
     update: (id, patch) => /** @type {Promise<ApiResult<Vendor>>} */ (
       send(`/api/vendors/${encodeURIComponent(id)}`, "PATCH", patch)
+    ),
+    /** @param {string[]} orderedIds */
+    reorder: (orderedIds) => /** @type {Promise<ApiResult<Vendor[]>>} */ (
+      send("/api/vendors/reorder", "PATCH", { orderedIds })
     ),
     /** @param {string} id */
     remove: (id) => send(`/api/vendors/${encodeURIComponent(id)}`, "DELETE"),

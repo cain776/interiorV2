@@ -46,19 +46,27 @@ export type PhotoKind =
   | "floorplan"
   | "naver_floorplan"
   | "fixture";
+export type UserRole = "admin" | "customer" | "vendor";
 
 export interface User {
   id: string;
   email: string;
   name: string;
   passwordHash: string;
+  role: UserRole;
+  canLogin: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface PublicUser {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
+  canLogin: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Project {
@@ -81,9 +89,15 @@ export interface Vendor {
   name: string;
   ceo: string | null;
   phone: string | null;
+  officeAddress: string | null;
+  companyPhone: string | null;
+  mobilePhone: string | null;
+  photoUrl: string | null;
   email: string | null;
   specialty: string | null;
   rating: number | null;
+  sortOrder: number;
+  isActive: boolean;
   memo: string | null;
   createdAt: Date;
   updatedAt: Date;

@@ -26,6 +26,7 @@ function svg(body, opts = {}) {
 /** @param {IconOpts} [opts] */ export const iLogOut = (opts) => svg(`<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>`, opts);
 /** @param {IconOpts} [opts] */ export const iLayers = (opts) => svg(`<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>`, opts);
 /** @param {IconOpts} [opts] */ export const iLayoutGrid = (opts) => svg(`<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>`, opts);
+/** @param {IconOpts} [opts] */ export const iBox = (opts) => svg(`<path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>`, opts);
 /** @param {IconOpts} [opts] */ export const iArrowUp = (opts) => svg(`<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>`, opts);
 /** @param {IconOpts} [opts] */ export const iArrowDown = (opts) => svg(`<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>`, opts);
 /** @param {IconOpts} [opts] */ export const iPlus = (opts) => svg(`<path d="M5 12h14"/><path d="M12 5v14"/>`, opts);

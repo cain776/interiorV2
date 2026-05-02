@@ -9,10 +9,17 @@ import { getState } from "../state.js";
 import { showToast } from "./toast.js";
 import { renderShell } from "./workspace-views.js";
 import {
+  buildModelPayload,
+  buildSketchUpBridgeCommand,
+  buildSketchUpRubyScript,
+} from "./workspace-model-export.js";
+import {
   currentLineItems,
   visibleConsiderations,
   WHOLE_HOME_SPACE_ID,
   isWholeHomeSpaceId,
+  comparisonVendors,
+  visibleQuotes,
 } from "./workspace-selectors.js";
 import {
   openConsiderationModal,
@@ -35,6 +42,7 @@ import {
   openPhotoEditModal,
   movePhoto,
   deletePhoto,
+  openReviewMaterialsModal,
 } from "./workspace-modals.js";
 import { bindWorkspaceDrag, shouldSuppressWorkspaceDragClick } from "./workspace-drag.js";
 import { openModal } from "./modal.js";
@@ -42,8 +50,10 @@ import { openModal } from "./modal.js";
 /** @typedef {import("../api.js").WorkspaceBundle} WorkspaceBundle */
 /** @typedef {import("../api.js").Consideration} Consideration */
 /** @typedef {"phases"|"spaces"} WorkspaceTab */
-/** @typedef {"quotes"|"spaces"} WorkspaceView */
+/** @typedef {"quotes"|"spaces"|"models"} WorkspaceView */
 /** @typedef {"space"|"lineItem"} SpacePhotoScope */
+/** @typedef {"isometric"|"top"|"front"} ModelCamera */
+/** @typedef {"mass"|"walls"} ModelDetail */
 /** @typedef {"turnkey"|"self"} Mode */
 
 /**
@@ -59,8 +69,12 @@ import { openModal } from "./modal.js";
  * @property {string|null} selectedConsiderationId
  * @property {string|null} selectedPhotoId
  * @property {SpacePhotoScope} spacePhotoScope
+ * @property {ModelCamera} modelCamera
+ * @property {ModelDetail} modelDetail
+ * @property {boolean} modelShowReferences
  * @property {Set<string>} vendorFilter
  * @property {Set<string>} comparisonVendorIds
+ * @property {Set<string>} hiddenVendorIds
  * @property {boolean} menuOpen
  * @property {Record<string, Consideration[]>} customConsiderationsByContext
  */
@@ -68,7 +82,7 @@ import { openModal } from "./modal.js";
 /**
  * @param {HTMLElement} root
  * @param {string} projectId
- * @param {{ view?: WorkspaceView }} [options]
+ * @param {{ view?: WorkspaceView, openReviewMaterials?: boolean }} [options]
  */
 export async function renderWorkspacePage(root, projectId, options = {}) {
   root.innerHTML = `<p class="muted">워크스페이스 불러오는 중...</p>`;
@@ -82,17 +96,21 @@ export async function renderWorkspacePage(root, projectId, options = {}) {
   const state = {
     bundle: result.data,
     view: options.view ?? "quotes",
-    tab: options.view === "spaces" ? "spaces" : "phases",
+    tab: options.view === "spaces" || options.view === "models" ? "spaces" : "phases",
     mode: "turnkey",
     selectedPhaseId: result.data.phases[0]?.id ?? null,
-    selectedSpaceId: options.view === "spaces" ? WHOLE_HOME_SPACE_ID : result.data.spaces[0]?.id ?? null,
+    selectedSpaceId: options.view === "spaces" || options.view === "models" ? WHOLE_HOME_SPACE_ID : result.data.spaces[0]?.id ?? null,
     selectedLineItemId: null,
     selectedQuoteId: null,
     selectedConsiderationId: null,
     selectedPhotoId: null,
     spacePhotoScope: "space",
+    modelCamera: "isometric",
+    modelDetail: "walls",
+    modelShowReferences: true,
     vendorFilter: new Set(),
     comparisonVendorIds: new Set(),
+    hiddenVendorIds: new Set(),
     menuOpen: false,
     customConsiderationsByContext: {},
   };
@@ -124,6 +142,9 @@ export async function renderWorkspacePage(root, projectId, options = {}) {
   };
 
   render();
+  if (options.openReviewMaterials) {
+    openReviewMaterialsModal(state, render);
+  }
 }
 
 /**
@@ -163,6 +184,7 @@ const PURE_HANDLERS = {
     state.mode = mode;
     state.selectedQuoteId = null;
     state.vendorFilter.clear();
+    state.hiddenVendorIds.clear();
     return true;
   },
   "ws-tab": (state, _id, trigger) => {
@@ -219,8 +241,20 @@ const PURE_HANDLERS = {
     else state.vendorFilter.add(id);
     return true;
   },
+  "ws-remove-vendor": (state, id) => {
+    if (!id) return false;
+    state.hiddenVendorIds.add(id);
+    state.vendorFilter.delete(id);
+    state.comparisonVendorIds.delete(id);
+    if (state.selectedQuoteId) {
+      const selectedQuote = state.bundle.quotes.find((quote) => quote.id === state.selectedQuoteId);
+      if (selectedQuote?.vendorId === id) state.selectedQuoteId = null;
+    }
+    return true;
+  },
   "ws-clear-vendors": (state) => {
     state.vendorFilter.clear();
+    state.hiddenVendorIds.clear();
     return true;
   },
   "ws-select-consideration": (state, id) => {
@@ -231,6 +265,22 @@ const PURE_HANDLERS = {
   "ws-select-photo": (state, id) => {
     if (!id) return false;
     state.selectedPhotoId = state.selectedPhotoId === id ? null : id;
+    return true;
+  },
+  "ws-model-camera": (state, _id, trigger) => {
+    const camera = trigger.dataset.camera;
+    if (camera !== "isometric" && camera !== "top" && camera !== "front") return false;
+    state.modelCamera = camera;
+    return true;
+  },
+  "ws-model-detail": (state, _id, trigger) => {
+    const detail = trigger.dataset.detail;
+    if (detail !== "mass" && detail !== "walls") return false;
+    state.modelDetail = detail;
+    return true;
+  },
+  "ws-model-toggle-references": (state) => {
+    state.modelShowReferences = !state.modelShowReferences;
     return true;
   },
 };
@@ -292,6 +342,10 @@ async function handleAsyncAction(action, id, trigger, state, render, reloadBundl
   if (action === "ws-adopt-quote") return adoptSelectedQuote(state, reloadBundle);
   if (action === "ws-adopt-line-item" && id) return adoptLineItemQuote(state, id, render, reloadBundle);
   if (action === "ws-open-vendor") return openVendorModal(state, render, reloadBundle);
+  if (action === "ws-open-review-materials") return openReviewMaterialsModal(state, render);
+  if (action === "ws-open-model-payload") return openModelPayload(state);
+  if (action === "ws-open-sketchup-ruby") return openSketchUpRuby(state);
+  if (action === "ws-open-sketchup-bridge") return openSketchUpBridge(state);
   if (action === "ws-open-photo") return openPhotoModal(state, render);
   if (action === "ws-edit-photo" && id) return openPhotoEditModal(state, id, render);
   if (action === "ws-move-photo" && id) return movePhoto(state, id, trigger.dataset.direction, render);
@@ -301,6 +355,36 @@ async function handleAsyncAction(action, id, trigger, state, render, reloadBundl
     if (src) openImageZoom(src, trigger.dataset.imageAlt ?? "");
     return;
   }
+}
+
+/** @param {WorkspaceState} state */
+function openModelPayload(state) {
+  const payload = buildModelPayload(state);
+  openModal(`
+    <h3>3D 생성 패키지</h3>
+    <p class="muted">Blender/SketchUp MCP 연결 시 이 구조를 모델 생성 입력으로 넘깁니다.</p>
+    <pre class="model-payload-preview">${esc(JSON.stringify(payload, null, 2))}</pre>
+  `);
+}
+
+/** @param {WorkspaceState} state */
+function openSketchUpRuby(state) {
+  const script = buildSketchUpRubyScript(state);
+  openModal(`
+    <h3>SketchUp Ruby 스크립트</h3>
+    <p class="muted">SketchUp Ruby Console 또는 향후 SketchUp MCP 브릿지에서 실행할 수 있는 초안입니다.</p>
+    <pre class="model-payload-preview">${esc(script)}</pre>
+  `);
+}
+
+/** @param {WorkspaceState} state */
+function openSketchUpBridge(state) {
+  const command = buildSketchUpBridgeCommand(state);
+  openModal(`
+    <h3>SketchUp 브릿지 명령</h3>
+    <p class="muted">SketchUp에서 tools/sketchup/interior_v2_bridge.rb 를 먼저 로드한 뒤, 이 명령을 로컬 브릿지로 보냅니다.</p>
+    <pre class="model-payload-preview">${esc(JSON.stringify(command, null, 2))}</pre>
+  `);
 }
 
 /**
@@ -386,7 +470,14 @@ function normalizeSelection(s, resetLineItem = false) {
   if (s.spacePhotoScope === "lineItem" && !s.selectedLineItemId) {
     s.spacePhotoScope = "space";
   }
-  if (!s.bundle.quotes.some((q) => q.id === s.selectedQuoteId)) {
+  pruneWorkspaceVendorState(s);
+  const selectedQuote = s.selectedQuoteId
+    ? s.bundle.quotes.find((q) => q.id === s.selectedQuoteId) ?? null
+    : null;
+  if (selectedQuote) {
+    const visibleVendorIds = new Set(comparisonVendors(s, visibleQuotes(s)).map((vendor) => vendor.id));
+    if (!visibleVendorIds.has(selectedQuote.vendorId)) s.selectedQuoteId = null;
+  } else {
     s.selectedQuoteId = null;
   }
   const considerationIds = new Set(visibleConsiderations(s).map((c) => c.id));
@@ -398,5 +489,19 @@ function normalizeSelection(s, resetLineItem = false) {
     .map((attachment) => attachment.id));
   if (s.selectedPhotoId && !photoIds.has(s.selectedPhotoId)) {
     s.selectedPhotoId = null;
+  }
+}
+
+/** @param {WorkspaceState} s */
+function pruneWorkspaceVendorState(s) {
+  const vendorIds = new Set(s.bundle.vendors.map((vendor) => vendor.id));
+  for (const id of [...s.vendorFilter]) {
+    if (!vendorIds.has(id)) s.vendorFilter.delete(id);
+  }
+  for (const id of [...s.comparisonVendorIds]) {
+    if (!vendorIds.has(id)) s.comparisonVendorIds.delete(id);
+  }
+  for (const id of [...s.hiddenVendorIds]) {
+    if (!vendorIds.has(id)) s.hiddenVendorIds.delete(id);
   }
 }

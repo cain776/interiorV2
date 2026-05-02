@@ -5,6 +5,7 @@ import { renderProjectHeader } from "./workspace-views-header.js";
 import { renderSidebar } from "./workspace-views-sidebar.js";
 import { renderConsiderationsPanel } from "./workspace-views-considerations.js";
 import { renderLineItemsPanel } from "./workspace-views-line-items.js";
+import { renderModelViewerPane } from "./workspace-views-models.js";
 import { renderQuotePane } from "./workspace-views-quote.js";
 import { renderSpaceManagementPane } from "./workspace-views-space.js";
 
@@ -13,6 +14,15 @@ import { renderSpaceManagementPane } from "./workspace-views-space.js";
 
 /** @param {WorkspaceState} s @param {User|null} currentUser */
 export function renderShell(s, currentUser) {
+  if (s.view === "models") {
+    return `
+      <section class="workspace-v1 model-workspace-view">
+        ${renderProjectHeader(s, currentUser)}
+        ${renderModelViewerPane(s)}
+      </section>
+    `;
+  }
+
   return `
     <section class="workspace-v1 ${s.view === "spaces" ? "space-management-view" : ""}">
       ${renderProjectHeader(s, currentUser)}

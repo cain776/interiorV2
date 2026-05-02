@@ -6,8 +6,12 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT NOT NULL UNIQUE,
   name          TEXT NOT NULL,
   password_hash TEXT NOT NULL,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  role          TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('admin', 'customer', 'vendor')),
+  can_login     BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS users_role_idx ON users(role);
 
 CREATE TABLE IF NOT EXISTS projects (
   id            TEXT PRIMARY KEY,
@@ -30,14 +34,21 @@ CREATE TABLE IF NOT EXISTS vendors (
   name        TEXT NOT NULL,
   ceo         TEXT,
   phone       TEXT,
+  office_address TEXT,
+  company_phone  TEXT,
+  mobile_phone   TEXT,
+  photo_url       TEXT,
   email       TEXT,
   specialty   TEXT,
   rating      INTEGER CHECK (rating IS NULL OR (rating BETWEEN 0 AND 5)),
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
   memo        TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS vendors_owner_idx ON vendors(owner_id);
+CREATE INDEX IF NOT EXISTS vendors_owner_sort_idx ON vendors(owner_id, sort_order);
 -- (owner_id, name) 인덱스는 vendors_owner_name_unique UNIQUE 제약이 자동 생성하는 인덱스로 대체.
 
 CREATE TABLE IF NOT EXISTS phases (

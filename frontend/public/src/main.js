@@ -3,6 +3,7 @@ import { api } from "./api.js";
 import { setState, getState } from "./state.js";
 import { renderLogin, renderSignup } from "./modules/auth.js";
 import { renderProjectsPage } from "./modules/projects.js";
+import { renderSettingsPage } from "./modules/settings.js";
 import { renderVendorsPage } from "./modules/vendors.js";
 import { renderWorkspacePage } from "./modules/workspace.js";
 import { closeModal } from "./modules/modal.js";
@@ -14,10 +15,17 @@ const PUBLIC_ROUTES = new Set(["/login", "/signup"]);
 function parseRoute(path) {
   const spaces = /^\/projects\/([^/]+)\/spaces$/.exec(path);
   if (spaces) return { name: "space_management", projectId: decodeURIComponent(spaces[1] ?? "") };
+  const models = /^\/projects\/([^/]+)\/models$/.exec(path);
+  if (models) return { name: "model_viewer", projectId: decodeURIComponent(models[1] ?? "") };
+  const reviewMaterials = /^\/projects\/([^/]+)\/review-materials$/.exec(path);
+  if (reviewMaterials) {
+    return { name: "review_materials", projectId: decodeURIComponent(reviewMaterials[1] ?? "") };
+  }
   const m = /^\/projects\/([^/]+)$/.exec(path);
   if (m) return { name: "workspace", projectId: decodeURIComponent(m[1] ?? "") };
   if (path === "/login") return { name: "login" };
   if (path === "/signup") return { name: "signup" };
+  if (path === "/settings") return { name: "settings" };
   if (path === "/vendors") return { name: "vendors" };
   if (path === "/projects" || path === "/" || path === "/dashboard")
     return { name: "projects" };
@@ -83,6 +91,8 @@ async function renderRoute(main, route) {
         main,
         (id) => navigate(`/projects/${encodeURIComponent(id)}`),
         (id) => navigate(`/projects/${encodeURIComponent(id)}/spaces`),
+        (id) => navigate(`/projects/${encodeURIComponent(id)}/models`),
+        (id) => navigate(`/projects/${encodeURIComponent(id)}/review-materials`),
       );
       return;
     case "workspace":
@@ -91,8 +101,17 @@ async function renderRoute(main, route) {
     case "space_management":
       await renderWorkspacePage(main, route.projectId ?? "", { view: "spaces" });
       return;
+    case "model_viewer":
+      await renderWorkspacePage(main, route.projectId ?? "", { view: "models" });
+      return;
+    case "review_materials":
+      await renderWorkspacePage(main, route.projectId ?? "", { openReviewMaterials: true });
+      return;
     case "vendors":
       await renderVendorsPage(main);
+      return;
+    case "settings":
+      await renderSettingsPage(main);
       return;
     default:
       main.innerHTML = html`<p class="muted">존재하지 않는 페이지: ${route.path ?? ""}</p>`;

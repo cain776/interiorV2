@@ -13,6 +13,7 @@
 @import url("./css/modal.css");
 @import url("./css/toast.css");
 @import url("./css/vendors.css");
+@import url("./css/settings.css");
 @import url("./css/workspace-shell.css");
 @import url("./css/workspace-sidebar.css");
 @import url("./css/workspace-buttons.css");
@@ -21,4 +22,6 @@
 @import url("./css/workspace-line-items.css");
 @import url("./css/workspace-quote.css");
 @import url("./css/workspace-photos.css");
+@import url("./css/workspace-models.css");
+@import url("./css/workspace-models-inspector.css");
 @import url("./css/workspace-polish.css");
